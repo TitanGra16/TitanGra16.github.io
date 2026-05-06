@@ -32,7 +32,6 @@ type LogoType = {
 
 type RenderLayers = {
   background: HTMLCanvasElement;
-  glyph: HTMLCanvasElement;
   sprites: Map<string, HTMLCanvasElement>;
 };
 
@@ -285,7 +284,6 @@ function createParticleSprites() {
 function createRenderLayers(width: number, height: number): RenderLayers {
   return {
     background: createBackgroundLayer(width, height),
-    glyph: createGlyphLayer(width, height),
     sprites: createParticleSprites()
   };
 }
@@ -504,71 +502,6 @@ function drawParticles(
   context.restore();
 }
 
-function createGlyphLayer(width: number, height: number) {
-  const layer = document.createElement("canvas");
-  const context = layer.getContext("2d");
-
-  layer.width = width;
-  layer.height = height;
-
-  if (!context) {
-    return layer;
-  }
-
-  const logo = getLogoType(width, height);
-  const fillGradient = context.createLinearGradient(
-    width / 2 - logo.fontSize * 2.6,
-    logo.y - logo.fontSize * 0.5,
-    width / 2 + logo.fontSize * 2.6,
-    logo.y + logo.fontSize * 0.5
-  );
-
-  fillGradient.addColorStop(0, "rgba(244, 232, 255, 0.92)");
-  fillGradient.addColorStop(0.48, "rgba(255, 255, 255, 0.98)");
-  fillGradient.addColorStop(1, "rgba(233, 198, 255, 0.9)");
-
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.font = `800 ${logo.fontSize}px ${FONT_STACK}`;
-  context.globalCompositeOperation = "source-over";
-
-  context.shadowColor = "#8A2BE2";
-  context.shadowBlur = 22;
-  context.lineWidth = Math.max(1.1, logo.fontSize * 0.018);
-  context.strokeStyle = "rgba(138, 43, 226, 0.56)";
-  context.strokeText(logo.text, width / 2, logo.y);
-
-  context.shadowColor = "#B026FF";
-  context.shadowBlur = 12;
-  context.lineWidth = Math.max(0.8, logo.fontSize * 0.006);
-  context.strokeStyle = "rgba(255, 46, 209, 0.34)";
-  context.strokeText(logo.text, width / 2, logo.y);
-
-  context.shadowBlur = 0;
-  context.fillStyle = fillGradient;
-  context.strokeText(logo.text, width / 2, logo.y);
-  context.fillText(logo.text, width / 2, logo.y);
-  return layer;
-}
-
-function drawGlyphTrace(
-  context: CanvasRenderingContext2D,
-  glyph: HTMLCanvasElement,
-  width: number,
-  height: number,
-  alpha: number
-) {
-  if (alpha <= 0.01) {
-    return;
-  }
-
-  context.save();
-  context.globalCompositeOperation = "source-over";
-  context.globalAlpha = alpha;
-  context.drawImage(glyph, 0, 0, width, height);
-  context.restore();
-}
-
 function drawShockwave(
   context: CanvasRenderingContext2D,
   width: number,
@@ -648,7 +581,6 @@ function drawStaticScene(
   drawBackground(context, layers.background, width, height, false);
   drawScannerLines(context, width, height, 2200, 0, true);
   drawParticles(context, particles, layers.sprites, INTRO_DURATION, 0, true);
-  drawGlyphTrace(context, layers.glyph, width, height, 0.9);
 }
 
 export default function TitanGraIntro({
@@ -785,10 +717,6 @@ export default function TitanGraIntro({
         timestamp,
         settled
       );
-      const traceAlpha =
-        smoothstep(2350, 3550, elapsed) * 0.78 + (settled ? 0.12 : 0);
-      drawGlyphTrace(context, layers.glyph, width, height, clamp(traceAlpha));
-
       const shockAlpha = drawShockwave(context, width, height, elapsed);
       drawGlitchBurst(
         context,

@@ -1,38 +1,66 @@
-# TitanGra Portfolio
+<div align="center">
 
-Homepage React + Vite + TypeScript per GitHub Pages, con intro cinematic full-screen su canvas. L'animazione genera particelle neon da una maschera offscreen del testo `TitanGra`, le fa convergere verso il logo e mantiene la scena viva dopo lo shockwave finale.
+# TitanGra
 
-## Setup locale
+**A cinematic developer portfolio born from particles, neon light, and motion.**
+
+[Live Portfolio](https://titangra16.github.io/) | [Source Code](https://github.com/TitanGra16/TitanGra16.github.io)
+
+</div>
+
+## Overview
+
+TitanGra is a dark cyber portfolio homepage built with React, Vite, and TypeScript. The first screen opens with a full-canvas digital birth sequence: neon particles drift out of the dark, converge into the TitanGra wordmark, pulse through a glitch shockwave, and settle into a living hero section.
+
+The goal is not to feel like a template. It is designed as a recognizable visual identity for a developer portfolio: elegant, technical, atmospheric, and fast enough to run directly on GitHub Pages.
+
+## Highlights
+
+- Full-screen canvas intro powered by `requestAnimationFrame`
+- Offscreen text mask used to generate particle target positions
+- Neon purple, lilac, and fuchsia particle system
+- Glitch burst, scanner lines, glow trails, and shockwave effects
+- Smooth idle state after the intro, with subtle particle motion
+- Responsive layout with device pixel ratio handling
+- Reduced-motion support for accessibility
+- Minimal navbar with About, Projects, and Contact anchors
+- Automated GitHub Pages deployment through GitHub Actions
+
+## Tech Stack
+
+React | Vite | TypeScript | Canvas API | CSS
+
+## Project Structure
+
+```text
+src/
+  App.tsx
+  main.tsx
+  styles.css
+  components/
+    Navbar.tsx
+    TitanGraIntro.tsx
+```
+
+## Local Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Il server Vite mostrerà l'URL locale in terminale, di solito `http://localhost:5173`.
-
-## Build
+Production build:
 
 ```bash
 npm run build
-npm run preview
 ```
 
-La build di produzione viene generata in `dist/`.
+## Deployment
 
-## Deploy su GitHub Pages
+The site is deployed to GitHub Pages from the production build in `dist/`.
 
-Questo repository ha un nome adatto a una GitHub Pages root (`TitanGra16.github.io`), quindi Vite può usare la base `/`.
+Deployment is handled by `.github/workflows/deploy.yml`. In the repository settings, GitHub Pages should use **GitHub Actions** as the source.
 
-Il sito non deve essere pubblicato direttamente dalla root del repository, perche `index.html` punta a file TypeScript sorgenti che funzionano solo nel dev server Vite. La workflow in `.github/workflows/deploy.yml` compila il progetto e pubblica automaticamente la cartella `dist/`.
+## Motion And Accessibility
 
-1. Vai su GitHub in `Settings > Pages`.
-2. In `Build and deployment`, imposta `Source` su `GitHub Actions`.
-3. Fai push su `main`.
-4. Apri la tab `Actions` e aspetta che `Deploy to GitHub Pages` finisca.
-
-Se in futuro sposti il progetto in un repository diverso da `username.github.io`, aggiungi `base: "/nome-repository/"` in `vite.config.ts`.
-
-## Accessibilità e motion
-
-La hero include il testo accessibile nascosto `TitanGra Portfolio`. Se il dispositivo usa `prefers-reduced-motion: reduce`, l'intro viene saltata e viene mostrata una versione statica del logo particellare.
+The hero includes hidden accessible text for screen readers and respects `prefers-reduced-motion`. When reduced motion is enabled, the intro is skipped and a static TitanGra scene is shown instead.
