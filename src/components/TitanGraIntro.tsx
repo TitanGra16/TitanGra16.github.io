@@ -226,16 +226,16 @@ function createParticles(targets: TargetPoint[], width: number, height: number) 
       y: start.y,
       targetX: target.x,
       targetY: target.y,
-      vx: (Math.random() - 0.5) * 2.2,
-      vy: (Math.random() - 0.5) * 2.2,
+      vx: (Math.random() - 0.5) * 1.35,
+      vy: (Math.random() - 0.5) * 1.35,
       alpha: 0,
-      baseSize: 0.7 + Math.random() * 1.8,
+      baseSize: 0.48 + Math.random() * 1.05,
       color: COLORS[index % COLORS.length],
       phase: Math.random() * Math.PI * 2,
-      noise: 0.4 + Math.random() * 1.6,
+      noise: 0.25 + Math.random() * 1.05,
       delay: 180 + Math.random() * 1200,
-      flicker: 0.65 + Math.random() * 1.8,
-      trail: index % 3 === 0
+      flicker: 0.45 + Math.random() * 1.1,
+      trail: index % 5 === 0
     };
   });
 }
@@ -263,16 +263,16 @@ function createParticleSprites() {
       );
 
       glow.addColorStop(0, color);
-      glow.addColorStop(0.2, `${color}E6`);
-      glow.addColorStop(0.5, `${color}66`);
+      glow.addColorStop(0.18, `${color}CC`);
+      glow.addColorStop(0.48, `${color}4D`);
       glow.addColorStop(1, `${color}00`);
       context.fillStyle = glow;
       context.fillRect(0, 0, spriteSize, spriteSize);
 
       context.fillStyle = "#F4E8FF";
-      context.globalAlpha = color === "#F4E8FF" ? 0.85 : 0.38;
+      context.globalAlpha = color === "#F4E8FF" ? 0.62 : 0.26;
       context.beginPath();
-      context.arc(center, center, 2.4, 0, Math.PI * 2);
+      context.arc(center, center, 1.9, 0, Math.PI * 2);
       context.fill();
     }
 
@@ -394,7 +394,7 @@ function updateParticle(
   const seconds = timestamp * 0.001;
 
   if (settled) {
-    const tremor = 0.42 + particle.noise * 0.45;
+    const tremor = 0.18 + particle.noise * 0.24;
     const idleX =
       particle.targetX +
       Math.sin(seconds * (1.15 + particle.noise) + particle.phase) * tremor;
@@ -402,11 +402,11 @@ function updateParticle(
       particle.targetY +
       Math.cos(seconds * (1.05 + particle.noise) + particle.phase) * tremor;
 
-    particle.x = lerp(particle.x, idleX, 0.09 * step);
-    particle.y = lerp(particle.y, idleY, 0.09 * step);
-    particle.vx *= 0.84;
-    particle.vy *= 0.84;
-    particle.alpha = lerp(particle.alpha, 0.9, 0.04 * step);
+    particle.x = lerp(particle.x, idleX, 0.07 * step);
+    particle.y = lerp(particle.y, idleY, 0.07 * step);
+    particle.vx *= 0.88;
+    particle.vy *= 0.88;
+    particle.alpha = lerp(particle.alpha, 0.54, 0.035 * step);
     return;
   }
 
@@ -420,8 +420,8 @@ function updateParticle(
   const fieldY =
     Math.cos(seconds * 2.8 + particle.phase + particle.x * 0.014) *
     particle.noise;
-  const pull = 0.003 + attraction * 0.027;
-  const turbulence = (1 - attraction) * 0.15;
+  const pull = 0.003 + attraction * 0.021;
+  const turbulence = (1 - attraction) * 0.09;
 
   particle.vx += (dx * pull + fieldX * turbulence) * step;
   particle.vy += (dy * pull + fieldY * turbulence) * step;
@@ -432,7 +432,7 @@ function updateParticle(
 
   if (attraction > 0.82) {
     const lock = (attraction - 0.82) / 0.18;
-    const microJitter = (1 - lock) * particle.noise * 2.2;
+    const microJitter = (1 - lock) * particle.noise * 1.15;
 
     particle.x = lerp(
       particle.x,
@@ -446,8 +446,8 @@ function updateParticle(
     );
   }
 
-  const firstBlink = 0.18 + smoothstep(360, 960, elapsed) * 0.42;
-  particle.alpha = birth * (firstBlink + attraction * 0.54);
+  const firstBlink = 0.16 + smoothstep(360, 960, elapsed) * 0.34;
+  particle.alpha = birth * (firstBlink + attraction * 0.38);
 }
 
 function drawParticles(
@@ -459,7 +459,7 @@ function drawParticles(
   settled: boolean
 ) {
   const attraction = settled ? 1 : smoothstep(1120, 3220, elapsed);
-  const flickerStrength = settled ? 0.1 : 0.28;
+  const flickerStrength = settled ? 0.035 : 0.14;
 
   context.save();
   context.globalCompositeOperation = "lighter";
@@ -477,8 +477,8 @@ function drawParticles(
       continue;
     }
 
-    const spriteSize = size * (settled ? 8.5 : 7.4);
-    context.globalAlpha = alpha * 0.9;
+    const spriteSize = size * (settled ? 6.4 : 6);
+    context.globalAlpha = alpha * 0.58;
     context.drawImage(
       sprite,
       particle.x - spriteSize / 2,
@@ -487,10 +487,10 @@ function drawParticles(
       spriteSize
     );
 
-    if (particle.trail && !settled && attraction > 0.22) {
-      context.globalAlpha = alpha * 0.23;
+    if (particle.trail && !settled && attraction > 0.28) {
+      context.globalAlpha = alpha * 0.15;
       context.strokeStyle = particle.color;
-      context.lineWidth = 0.7;
+      context.lineWidth = 0.55;
       context.beginPath();
       context.moveTo(particle.x, particle.y);
       context.lineTo(
@@ -516,16 +516,36 @@ function createGlyphLayer(width: number, height: number) {
   }
 
   const logo = getLogoType(width, height);
+  const fillGradient = context.createLinearGradient(
+    width / 2 - logo.fontSize * 2.6,
+    logo.y - logo.fontSize * 0.5,
+    width / 2 + logo.fontSize * 2.6,
+    logo.y + logo.fontSize * 0.5
+  );
+
+  fillGradient.addColorStop(0, "rgba(244, 232, 255, 0.92)");
+  fillGradient.addColorStop(0.48, "rgba(255, 255, 255, 0.98)");
+  fillGradient.addColorStop(1, "rgba(233, 198, 255, 0.9)");
 
   context.textAlign = "center";
   context.textBaseline = "middle";
   context.font = `800 ${logo.fontSize}px ${FONT_STACK}`;
-  context.globalCompositeOperation = "lighter";
+  context.globalCompositeOperation = "source-over";
+
+  context.shadowColor = "#8A2BE2";
+  context.shadowBlur = 22;
+  context.lineWidth = Math.max(1.1, logo.fontSize * 0.018);
+  context.strokeStyle = "rgba(138, 43, 226, 0.56)";
+  context.strokeText(logo.text, width / 2, logo.y);
+
   context.shadowColor = "#B026FF";
-  context.shadowBlur = 34;
-  context.lineWidth = Math.max(1, logo.fontSize * 0.012);
-  context.strokeStyle = "rgba(176, 38, 255, 0.2)";
-  context.fillStyle = "rgba(244, 232, 255, 0.035)";
+  context.shadowBlur = 12;
+  context.lineWidth = Math.max(0.8, logo.fontSize * 0.006);
+  context.strokeStyle = "rgba(255, 46, 209, 0.34)";
+  context.strokeText(logo.text, width / 2, logo.y);
+
+  context.shadowBlur = 0;
+  context.fillStyle = fillGradient;
   context.strokeText(logo.text, width / 2, logo.y);
   context.fillText(logo.text, width / 2, logo.y);
   return layer;
@@ -543,7 +563,7 @@ function drawGlyphTrace(
   }
 
   context.save();
-  context.globalCompositeOperation = "lighter";
+  context.globalCompositeOperation = "source-over";
   context.globalAlpha = alpha;
   context.drawImage(glyph, 0, 0, width, height);
   context.restore();
@@ -627,8 +647,8 @@ function drawStaticScene(
 ) {
   drawBackground(context, layers.background, width, height, false);
   drawScannerLines(context, width, height, 2200, 0, true);
-  drawGlyphTrace(context, layers.glyph, width, height, 1);
   drawParticles(context, particles, layers.sprites, INTRO_DURATION, 0, true);
+  drawGlyphTrace(context, layers.glyph, width, height, 0.9);
 }
 
 export default function TitanGraIntro({
@@ -757,9 +777,6 @@ export default function TitanGraIntro({
         updateParticle(particle, elapsed, timestamp, delta, settled);
       });
 
-      const traceAlpha =
-        smoothstep(2600, 3600, elapsed) * 0.75 + (settled ? 0.25 : 0);
-      drawGlyphTrace(context, layers.glyph, width, height, clamp(traceAlpha));
       drawParticles(
         context,
         particles,
@@ -768,6 +785,9 @@ export default function TitanGraIntro({
         timestamp,
         settled
       );
+      const traceAlpha =
+        smoothstep(2350, 3550, elapsed) * 0.78 + (settled ? 0.12 : 0);
+      drawGlyphTrace(context, layers.glyph, width, height, clamp(traceAlpha));
 
       const shockAlpha = drawShockwave(context, width, height, elapsed);
       drawGlitchBurst(
@@ -794,6 +814,10 @@ export default function TitanGraIntro({
       <h1 className="sr-only">TitanGra Portfolio</h1>
 
       <canvas ref={canvasRef} className="intro__canvas" aria-hidden="true" />
+
+      <div className="intro__brand" aria-hidden="true">
+        TitanGra
+      </div>
 
       {!isReady && (
         <button className="intro__skip" type="button" onClick={skipIntro}>
