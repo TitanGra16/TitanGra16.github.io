@@ -24,9 +24,12 @@ La build di produzione viene generata in `dist/`.
 
 Questo repository ha un nome adatto a una GitHub Pages root (`TitanGra16.github.io`), quindi Vite può usare la base `/`.
 
-1. Esegui `npm run build`.
-2. Pubblica il contenuto di `dist/` su GitHub Pages.
-3. In alternativa, configura una GitHub Action che installa le dipendenze, esegue `npm run build` e pubblica `dist/`.
+Il sito non deve essere pubblicato direttamente dalla root del repository, perche `index.html` punta a file TypeScript sorgenti che funzionano solo nel dev server Vite. La workflow in `.github/workflows/deploy.yml` compila il progetto e pubblica automaticamente la cartella `dist/`.
+
+1. Vai su GitHub in `Settings > Pages`.
+2. In `Build and deployment`, imposta `Source` su `GitHub Actions`.
+3. Fai push su `main`.
+4. Apri la tab `Actions` e aspetta che `Deploy to GitHub Pages` finisca.
 
 Se in futuro sposti il progetto in un repository diverso da `username.github.io`, aggiungi `base: "/nome-repository/"` in `vite.config.ts`.
 
