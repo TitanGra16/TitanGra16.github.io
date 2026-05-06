@@ -21,12 +21,19 @@ type Particle = TargetPoint & {
   noise: number;
   delay: number;
   flicker: number;
+  trail: boolean;
 };
 
 type LogoType = {
   text: string;
   fontSize: number;
   y: number;
+};
+
+type RenderLayers = {
+  background: HTMLCanvasElement;
+  glyph: HTMLCanvasElement;
+  sprites: Map<string, HTMLCanvasElement>;
 };
 
 const INTRO_DURATION = 4200;
@@ -50,6 +57,36 @@ const smoothstep = (edge0: number, edge1: number, value: number) => {
 
 const easeOutCubic = (value: number) => 1 - Math.pow(1 - clamp(value), 3);
 
+function getCanvasPixelRatio(width: number) {
+  const deviceRatio = window.devicePixelRatio || 1;
+
+  if (width >= 1280) {
+    return Math.min(deviceRatio, 1.15);
+  }
+
+  if (width >= 768) {
+    return Math.min(deviceRatio, 1.3);
+  }
+
+  return Math.min(deviceRatio, 1.45);
+}
+
+function getParticleBudget(width: number) {
+  if (width < 520) {
+    return 620;
+  }
+
+  if (width < 900) {
+    return 860;
+  }
+
+  if (width < 1400) {
+    return 1120;
+  }
+
+  return 1320;
+}
+
 function useReducedMotion() {
   const [reducedMotion, setReducedMotion] = useState(false);
 
@@ -58,10 +95,18 @@ function useReducedMotion() {
     const updatePreference = () => setReducedMotion(media.matches);
 
     updatePreference();
-    media.addEventListener("change", updatePreference);
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", updatePreference);
+    } else {
+      media.addListener(updatePreference);
+    }
 
     return () => {
-      media.removeEventListener("change", updatePreference);
+      if (typeof media.removeEventListener === "function") {
+        media.removeEventListener("change", updatePreference);
+      } else {
+        media.removeListener(updatePreference);
+      }
     };
   }, []);
 
@@ -167,7 +212,7 @@ function randomStart(width: number, height: number): TargetPoint {
 }
 
 function createParticles(targets: TargetPoint[], width: number, height: number) {
-  const maxParticles = width < 520 ? 1100 : width < 900 ? 1600 : 2400;
+  const maxParticles = getParticleBudget(width);
   const selectedTargets =
     targets.length > maxParticles
       ? shuffle([...targets]).slice(0, maxParticles)
@@ -189,19 +234,74 @@ function createParticles(targets: TargetPoint[], width: number, height: number) 
       phase: Math.random() * Math.PI * 2,
       noise: 0.4 + Math.random() * 1.6,
       delay: 180 + Math.random() * 1200,
-      flicker: 0.65 + Math.random() * 1.8
+      flicker: 0.65 + Math.random() * 1.8,
+      trail: index % 3 === 0
     };
   });
 }
 
-function drawBackground(
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  fade = true
-) {
-  context.globalCompositeOperation = "source-over";
-  context.fillStyle = fade ? "rgba(5, 3, 10, 0.24)" : "#05030A";
+function createParticleSprites() {
+  const sprites = new Map<string, HTMLCanvasElement>();
+  const spriteSize = 48;
+
+  COLORS.forEach((color) => {
+    const sprite = document.createElement("canvas");
+    const context = sprite.getContext("2d");
+
+    sprite.width = spriteSize;
+    sprite.height = spriteSize;
+
+    if (context) {
+      const center = spriteSize / 2;
+      const glow = context.createRadialGradient(
+        center,
+        center,
+        0,
+        center,
+        center,
+        center
+      );
+
+      glow.addColorStop(0, color);
+      glow.addColorStop(0.2, `${color}E6`);
+      glow.addColorStop(0.5, `${color}66`);
+      glow.addColorStop(1, `${color}00`);
+      context.fillStyle = glow;
+      context.fillRect(0, 0, spriteSize, spriteSize);
+
+      context.fillStyle = "#F4E8FF";
+      context.globalAlpha = color === "#F4E8FF" ? 0.85 : 0.38;
+      context.beginPath();
+      context.arc(center, center, 2.4, 0, Math.PI * 2);
+      context.fill();
+    }
+
+    sprites.set(color, sprite);
+  });
+
+  return sprites;
+}
+
+function createRenderLayers(width: number, height: number): RenderLayers {
+  return {
+    background: createBackgroundLayer(width, height),
+    glyph: createGlyphLayer(width, height),
+    sprites: createParticleSprites()
+  };
+}
+
+function createBackgroundLayer(width: number, height: number) {
+  const layer = document.createElement("canvas");
+  const context = layer.getContext("2d");
+
+  layer.width = width;
+  layer.height = height;
+
+  if (!context) {
+    return layer;
+  }
+
+  context.fillStyle = "#05030A";
   context.fillRect(0, 0, width, height);
 
   const depth = context.createLinearGradient(0, 0, width, height);
@@ -224,6 +324,24 @@ function drawBackground(
   centerGlow.addColorStop(1, "rgba(5, 3, 10, 0)");
   context.fillStyle = centerGlow;
   context.fillRect(0, 0, width, height);
+
+  return layer;
+}
+
+function drawBackground(
+  context: CanvasRenderingContext2D,
+  layer: HTMLCanvasElement,
+  width: number,
+  height: number,
+  fade = true
+) {
+  context.globalCompositeOperation = "source-over";
+  context.globalAlpha = 1;
+  context.fillStyle = fade ? "rgba(5, 3, 10, 0.3)" : "#05030A";
+  context.fillRect(0, 0, width, height);
+  context.globalAlpha = fade ? 0.72 : 1;
+  context.drawImage(layer, 0, 0, width, height);
+  context.globalAlpha = 1;
 }
 
 function drawScannerLines(
@@ -335,6 +453,7 @@ function updateParticle(
 function drawParticles(
   context: CanvasRenderingContext2D,
   particles: Particle[],
+  sprites: Map<string, HTMLCanvasElement>,
   elapsed: number,
   timestamp: number,
   settled: boolean
@@ -346,6 +465,7 @@ function drawParticles(
   context.globalCompositeOperation = "lighter";
 
   for (const particle of particles) {
+    const sprite = sprites.get(particle.color);
     const flicker =
       1 +
       Math.sin(timestamp * 0.006 * particle.flicker + particle.phase) *
@@ -353,20 +473,21 @@ function drawParticles(
     const size = particle.baseSize + attraction * 0.55;
     const alpha = clamp(particle.alpha * flicker, 0, 1);
 
-    if (alpha <= 0.01) {
+    if (alpha <= 0.01 || !sprite) {
       continue;
     }
 
-    context.globalAlpha = alpha;
-    context.fillStyle = particle.color;
-    context.shadowColor = particle.color;
-    context.shadowBlur = 9 + attraction * 12;
+    const spriteSize = size * (settled ? 8.5 : 7.4);
+    context.globalAlpha = alpha * 0.9;
+    context.drawImage(
+      sprite,
+      particle.x - spriteSize / 2,
+      particle.y - spriteSize / 2,
+      spriteSize,
+      spriteSize
+    );
 
-    context.beginPath();
-    context.arc(particle.x, particle.y, size, 0, Math.PI * 2);
-    context.fill();
-
-    if (!settled && attraction > 0.18) {
+    if (particle.trail && !settled && attraction > 0.22) {
       context.globalAlpha = alpha * 0.23;
       context.strokeStyle = particle.color;
       context.lineWidth = 0.7;
@@ -383,15 +504,19 @@ function drawParticles(
   context.restore();
 }
 
-function drawGlyphTrace(
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  alpha: number
-) {
+function createGlyphLayer(width: number, height: number) {
+  const layer = document.createElement("canvas");
+  const context = layer.getContext("2d");
+
+  layer.width = width;
+  layer.height = height;
+
+  if (!context) {
+    return layer;
+  }
+
   const logo = getLogoType(width, height);
 
-  context.save();
   context.textAlign = "center";
   context.textBaseline = "middle";
   context.font = `800 ${logo.fontSize}px ${FONT_STACK}`;
@@ -399,10 +524,28 @@ function drawGlyphTrace(
   context.shadowColor = "#B026FF";
   context.shadowBlur = 34;
   context.lineWidth = Math.max(1, logo.fontSize * 0.012);
-  context.strokeStyle = `rgba(176, 38, 255, ${0.2 * alpha})`;
-  context.fillStyle = `rgba(244, 232, 255, ${0.035 * alpha})`;
+  context.strokeStyle = "rgba(176, 38, 255, 0.2)";
+  context.fillStyle = "rgba(244, 232, 255, 0.035)";
   context.strokeText(logo.text, width / 2, logo.y);
   context.fillText(logo.text, width / 2, logo.y);
+  return layer;
+}
+
+function drawGlyphTrace(
+  context: CanvasRenderingContext2D,
+  glyph: HTMLCanvasElement,
+  width: number,
+  height: number,
+  alpha: number
+) {
+  if (alpha <= 0.01) {
+    return;
+  }
+
+  context.save();
+  context.globalCompositeOperation = "lighter";
+  context.globalAlpha = alpha;
+  context.drawImage(glyph, 0, 0, width, height);
   context.restore();
 }
 
@@ -478,33 +621,14 @@ function drawGlitchBurst(
 function drawStaticScene(
   context: CanvasRenderingContext2D,
   particles: Particle[],
+  layers: RenderLayers,
   width: number,
   height: number
 ) {
-  drawBackground(context, width, height, false);
+  drawBackground(context, layers.background, width, height, false);
   drawScannerLines(context, width, height, 2200, 0, true);
-  drawGlyphTrace(context, width, height, 1);
-
-  context.save();
-  context.globalCompositeOperation = "lighter";
-
-  particles.forEach((particle) => {
-    context.globalAlpha = 0.95;
-    context.fillStyle = particle.color;
-    context.shadowColor = particle.color;
-    context.shadowBlur = 16;
-    context.beginPath();
-    context.arc(
-      particle.targetX,
-      particle.targetY,
-      particle.baseSize + 0.65,
-      0,
-      Math.PI * 2
-    );
-    context.fill();
-  });
-
-  context.restore();
+  drawGlyphTrace(context, layers.glyph, width, height, 1);
+  drawParticles(context, particles, layers.sprites, INTRO_DURATION, 0, true);
 }
 
 export default function TitanGraIntro({
@@ -536,7 +660,7 @@ export default function TitanGraIntro({
       return undefined;
     }
 
-    const context = canvas.getContext("2d", { alpha: true });
+    const context = canvas.getContext("2d", { alpha: false });
 
     if (!context) {
       finishIntro();
@@ -547,6 +671,7 @@ export default function TitanGraIntro({
     let width = 0;
     let height = 0;
     let particles: Particle[] = [];
+    let layers: RenderLayers | null = null;
     let previousTimestamp = performance.now();
     const startTimestamp = performance.now();
     let nextBurstTimestamp = startTimestamp + 5200;
@@ -554,16 +679,19 @@ export default function TitanGraIntro({
 
     const resize = () => {
       const bounds = canvas.getBoundingClientRect();
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
 
       width = Math.max(320, Math.floor(bounds.width));
       height = Math.max(520, Math.floor(bounds.height));
+      const pixelRatio = getCanvasPixelRatio(width);
+
       canvas.width = Math.floor(width * pixelRatio);
       canvas.height = Math.floor(height * pixelRatio);
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      context.imageSmoothingEnabled = true;
 
       const targets = buildTextTargets(width, height);
       particles = createParticles(targets, width, height);
+      layers = createRenderLayers(width, height);
 
       if (completedRef.current || reducedMotion) {
         particles.forEach((particle) => {
@@ -573,20 +701,24 @@ export default function TitanGraIntro({
         });
       }
 
-      if (reducedMotion) {
-        drawStaticScene(context, particles, width, height);
+      if (reducedMotion && layers) {
+        drawStaticScene(context, particles, layers, width, height);
       }
     };
 
-    const observer = new ResizeObserver(resize);
-    observer.observe(canvas);
+    const observer =
+      "ResizeObserver" in window ? new ResizeObserver(resize) : null;
+
+    observer?.observe(canvas);
+    window.addEventListener("resize", resize);
     resize();
 
     if (reducedMotion) {
       finishIntro();
 
       return () => {
-        observer.disconnect();
+        observer?.disconnect();
+        window.removeEventListener("resize", resize);
       };
     }
 
@@ -613,7 +745,12 @@ export default function TitanGraIntro({
           ? 1 - (burstEndTimestamp - timestamp) / 260
           : 0;
 
-      drawBackground(context, width, height, true);
+      if (!layers) {
+        animationFrame = requestAnimationFrame(animate);
+        return;
+      }
+
+      drawBackground(context, layers.background, width, height, true);
       drawScannerLines(context, width, height, elapsed, timestamp, settled);
 
       particles.forEach((particle) => {
@@ -622,8 +759,15 @@ export default function TitanGraIntro({
 
       const traceAlpha =
         smoothstep(2600, 3600, elapsed) * 0.75 + (settled ? 0.25 : 0);
-      drawGlyphTrace(context, width, height, clamp(traceAlpha));
-      drawParticles(context, particles, elapsed, timestamp, settled);
+      drawGlyphTrace(context, layers.glyph, width, height, clamp(traceAlpha));
+      drawParticles(
+        context,
+        particles,
+        layers.sprites,
+        elapsed,
+        timestamp,
+        settled
+      );
 
       const shockAlpha = drawShockwave(context, width, height, elapsed);
       drawGlitchBurst(
@@ -640,7 +784,8 @@ export default function TitanGraIntro({
 
     return () => {
       cancelAnimationFrame(animationFrame);
-      observer.disconnect();
+      observer?.disconnect();
+      window.removeEventListener("resize", resize);
     };
   }, [finishIntro, reducedMotion]);
 
