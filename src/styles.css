@@ -542,6 +542,10 @@ a {
   gap: clamp(0.9rem, 2vw, 1.25rem);
 }
 
+.focus-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .project-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -756,6 +760,12 @@ a {
   }
 }
 
+@media (max-width: 960px) {
+  .focus-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 680px) {
   .navbar {
     gap: 1rem;
@@ -784,7 +794,7 @@ a {
   }
 
   .stat-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .focus-grid,

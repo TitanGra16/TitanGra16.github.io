@@ -16,14 +16,20 @@ const focusAreas = [
   {
     title: "Web development",
     description:
-      "Esperimenti e applicazioni con PHP, JavaScript, TypeScript, React, PWA e interfacce responsive pensate per il browser."
+      "Esperimenti e applicazioni con PHP, SQL, JavaScript, TypeScript, React, PWA e interfacce responsive pensate per il browser."
+  },
+  {
+    title: "Linux e network analysis",
+    description:
+      "Studio e sperimentazione con ambienti Linux, Kali Linux e strumenti come Wireshark per osservare traffico, protocolli e comportamento delle reti."
   }
 ];
 
 const stats = [
   { value: "CS", label: "Scienze dell'Informazione" },
   { value: "C/C++", label: "interesse system-side" },
-  { value: "Web", label: "PHP, JS, TypeScript" }
+  { value: "Web", label: "PHP, SQL, JS, TypeScript" },
+  { value: "Tools", label: "Linux, Kali, Wireshark" }
 ];
 
 const projects = [
@@ -68,10 +74,14 @@ const skills = [
   "C++",
   "Java",
   "PHP",
+  "SQL",
   "JavaScript",
   "TypeScript",
   "React",
   "Python",
+  "Linux",
+  "Kali Linux",
+  "Wireshark",
   "Git",
   "GitHub Pages"
 ];
@@ -99,7 +109,7 @@ export default function App() {
                 Studio Scienze dell'Informazione all'universita e mi piace
                 esplorare sia la programmazione piu vicina al sistema, come C e
                 C++, sia lo sviluppo applicativo con Java e il mondo web con PHP,
-                JavaScript e TypeScript.
+                SQL, JavaScript e TypeScript.
               </p>
             </div>
 
@@ -108,9 +118,10 @@ export default function App() {
                 <p>
                   Mi interessa capire come funzionano davvero le cose: dalla
                   logica di un programma console alla struttura di una web app,
-                  fino al deploy di un progetto online. Per questo alterno
-                  progetti universitari, piccoli tool personali e interfacce web
-                  piu sperimentali.
+                  fino al deploy di un progetto online e all'analisi di rete con
+                  strumenti come Wireshark. Per questo alterno progetti
+                  universitari, piccoli tool personali, ambienti Linux/Kali e
+                  interfacce web piu sperimentali.
                 </p>
                 <p>
                   TitanGra e il mio spazio per raccogliere questo percorso:
