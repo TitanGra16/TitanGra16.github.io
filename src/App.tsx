@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import TitanGraIntro from "./components/TitanGraIntro";
 
@@ -86,8 +86,67 @@ const skills = [
   "GitHub Pages"
 ];
 
+const processSteps = [
+  {
+    step: "01",
+    title: "Studio le basi",
+    description:
+      "Algoritmi, strutture dati, logica, programmazione in C/C++ e Java: prima capisco il comportamento, poi costruisco."
+  },
+  {
+    step: "02",
+    title: "Prototipo sul web",
+    description:
+      "Trasformo idee piccole in interfacce utilizzabili con PHP, SQL, JavaScript, TypeScript e React."
+  },
+  {
+    step: "03",
+    title: "Analizzo sistemi e reti",
+    description:
+      "Uso Linux, Kali Linux e Wireshark per osservare traffico, protocolli e dettagli tecnici che spesso restano invisibili."
+  },
+  {
+    step: "04",
+    title: "Rifinisco e pubblico",
+    description:
+      "Pulisco codice, testo e responsive design, poi porto online i progetti con Git, GitHub e GitHub Pages."
+  }
+];
+
 export default function App() {
   const [introComplete, setIntroComplete] = useState(false);
+
+  useEffect(() => {
+    let animationFrame = 0;
+
+    const updateParallax = () => {
+      animationFrame = 0;
+      const scrollY = window.scrollY;
+      const root = document.documentElement;
+
+      root.style.setProperty("--parallax-slow", `${scrollY * -0.035}px`);
+      root.style.setProperty("--parallax-medium", `${scrollY * -0.065}px`);
+      root.style.setProperty("--parallax-fast", `${scrollY * -0.11}px`);
+    };
+
+    const requestUpdate = () => {
+      if (animationFrame) {
+        return;
+      }
+
+      animationFrame = window.requestAnimationFrame(updateParallax);
+    };
+
+    requestUpdate();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", requestUpdate);
+    };
+  }, []);
 
   const handleIntroComplete = useCallback(() => {
     setIntroComplete(true);
@@ -101,6 +160,9 @@ export default function App() {
         <TitanGraIntro onIntroComplete={handleIntroComplete} />
 
         <section id="about" className="content-section content-section--first">
+          <div className="section-depth section-depth--about-a" aria-hidden="true" />
+          <div className="section-depth section-depth--about-b" aria-hidden="true" />
+
           <div className="section-inner">
             <div className="section-header">
               <p className="section-kicker">About</p>
@@ -158,7 +220,48 @@ export default function App() {
           </div>
         </section>
 
+        <section id="lab" className="content-section content-section--lab">
+          <div className="section-depth section-depth--lab-a" aria-hidden="true" />
+          <div className="section-depth section-depth--lab-b" aria-hidden="true" />
+
+          <div className="section-inner lab-layout">
+            <div className="section-header lab-header">
+              <p className="section-kicker">Lab Process</p>
+              <h2>Un percorso tecnico, non una vetrina statica.</h2>
+              <p className="section-lede">
+                La struttura del sito ora lavora come una sequenza: ingresso
+                cinematico, identita, metodo, progetti e contatto. Ogni sezione
+                resta viva con livelli parallax leggeri e leggibili.
+              </p>
+            </div>
+
+            <div className="lab-console" aria-label="TitanGra technical process">
+              <div className="lab-console__screen">
+                <span className="lab-console__eyebrow">/usr/titangra/process</span>
+                <strong>Information Science</strong>
+                <p>C/C++ . Java . PHP . SQL . Linux . Network Analysis</p>
+                <div className="lab-console__grid" aria-hidden="true" />
+              </div>
+            </div>
+
+            <div className="process-list">
+              {processSteps.map((item) => (
+                <article className="process-item" key={item.step}>
+                  <span>{item.step}</span>
+                  <div>
+                    <h3>{item.title}</h3>
+                    <p>{item.description}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section id="projects" className="content-section">
+          <div className="section-depth section-depth--projects-a" aria-hidden="true" />
+          <div className="section-depth section-depth--projects-b" aria-hidden="true" />
+
           <div className="section-inner">
             <div className="section-header">
               <p className="section-kicker">Projects</p>
@@ -199,6 +302,8 @@ export default function App() {
         </section>
 
         <section id="contact" className="content-section">
+          <div className="section-depth section-depth--contact-a" aria-hidden="true" />
+
           <div className="section-inner">
             <div className="contact-layout">
               <div className="section-header">

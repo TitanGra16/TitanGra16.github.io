@@ -637,6 +637,33 @@ export default function TitanGraIntro({
 
       <canvas ref={canvasRef} className="intro__canvas" aria-hidden="true" />
 
+      <div className="intro__gate" aria-hidden="true">
+        <span />
+        <span />
+      </div>
+
+      <div className="intro__depth-map" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+
+      <div className="intro__monolith" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+
+      <div className="intro__hud intro__hud--left" aria-hidden="true">
+        <span>INIT 01</span>
+        <strong>Information Science</strong>
+      </div>
+
+      <div className="intro__hud intro__hud--right" aria-hidden="true">
+        <span>STACK</span>
+        <strong>C/C++ . Java . Web</strong>
+      </div>
+
       <div className="intro__brand" data-text={BRAND} aria-hidden="true">
         {Array.from(BRAND).map((letter, index) => (
           <span
