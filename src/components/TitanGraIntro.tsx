@@ -1,46 +1,39 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 
 type TitanGraIntroProps = {
   onIntroComplete: () => void;
 };
 
-type TargetPoint = {
+type ParticleKind = "star" | "signal" | "shard";
+
+type Particle = {
+  kind: ParticleKind;
   x: number;
   y: number;
-};
-
-type Particle = TargetPoint & {
-  targetX: number;
-  targetY: number;
+  startX: number;
+  startY: number;
   vx: number;
   vy: number;
+  angle: number;
+  orbitX: number;
+  orbitY: number;
+  speed: number;
+  size: number;
+  length: number;
   alpha: number;
-  baseSize: number;
   color: string;
   phase: number;
-  noise: number;
-  delay: number;
-  flicker: number;
-  trail: boolean;
 };
 
-type LogoType = {
-  text: string;
-  fontSize: number;
-  y: number;
-};
-
-type RenderLayers = {
-  background: HTMLCanvasElement;
-  sprites: Map<string, HTMLCanvasElement>;
-};
-
-const INTRO_DURATION = 4200;
-const SHOCKWAVE_START = 3300;
-const SHOCKWAVE_DURATION = 760;
-const LOGO_TEXT = "TitanGra";
-const FONT_STACK =
-  "Inter, Sora, Space Grotesk, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+const BRAND = "TitanGra";
+const INTRO_DURATION = 3800;
+const SHOCKWAVE_AT = 2920;
 const COLORS = ["#8A2BE2", "#B026FF", "#FF2ED1", "#F4E8FF"] as const;
 
 const clamp = (value: number, min = 0, max = 1) =>
@@ -56,36 +49,6 @@ const smoothstep = (edge0: number, edge1: number, value: number) => {
 
 const easeOutCubic = (value: number) => 1 - Math.pow(1 - clamp(value), 3);
 
-function getCanvasPixelRatio(width: number) {
-  const deviceRatio = window.devicePixelRatio || 1;
-
-  if (width >= 1280) {
-    return Math.min(deviceRatio, 1.15);
-  }
-
-  if (width >= 768) {
-    return Math.min(deviceRatio, 1.3);
-  }
-
-  return Math.min(deviceRatio, 1.45);
-}
-
-function getParticleBudget(width: number) {
-  if (width < 520) {
-    return 620;
-  }
-
-  if (width < 900) {
-    return 860;
-  }
-
-  if (width < 1400) {
-    return 1120;
-  }
-
-  return 1320;
-}
-
 function useReducedMotion() {
   const [reducedMotion, setReducedMotion] = useState(false);
 
@@ -94,6 +57,7 @@ function useReducedMotion() {
     const updatePreference = () => setReducedMotion(media.matches);
 
     updatePreference();
+
     if (typeof media.addEventListener === "function") {
       media.addEventListener("change", updatePreference);
     } else {
@@ -112,88 +76,23 @@ function useReducedMotion() {
   return reducedMotion;
 }
 
-function getLogoType(width: number, height: number): LogoType {
-  const measureCanvas = document.createElement("canvas");
-  const measureContext = measureCanvas.getContext("2d");
-  let fontSize = clamp(width, 320, 1280) * 0.15;
+function getCanvasPixelRatio(width: number) {
+  const deviceRatio = window.devicePixelRatio || 1;
 
-  fontSize = Math.min(fontSize, height * 0.2, 150);
-  fontSize = Math.max(fontSize, 48);
-
-  if (measureContext) {
-    measureContext.font = `800 ${fontSize}px ${FONT_STACK}`;
-    const measured = measureContext.measureText(LOGO_TEXT).width;
-    const maxWidth = width * 0.82;
-
-    if (measured > maxWidth) {
-      fontSize *= maxWidth / measured;
-    }
+  if (width >= 1280) {
+    return Math.min(deviceRatio, 1.15);
   }
 
-  return {
-    text: LOGO_TEXT,
-    fontSize,
-    y: height * 0.48
-  };
+  if (width >= 768) {
+    return Math.min(deviceRatio, 1.3);
+  }
+
+  return Math.min(deviceRatio, 1.45);
 }
 
-function shuffle<T>(items: T[]) {
-  for (let i = items.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [items[i], items[j]] = [items[j], items[i]];
-  }
-
-  return items;
-}
-
-function buildTextTargets(width: number, height: number): TargetPoint[] {
-  const mask = document.createElement("canvas");
-  const context = mask.getContext("2d", { willReadFrequently: true });
-
-  if (!context) {
-    return [];
-  }
-
-  mask.width = Math.max(1, Math.floor(width));
-  mask.height = Math.max(1, Math.floor(height));
-
-  const logo = getLogoType(width, height);
-  context.clearRect(0, 0, mask.width, mask.height);
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.font = `800 ${logo.fontSize}px ${FONT_STACK}`;
-  context.fillStyle = "#ffffff";
-  context.shadowColor = "#ffffff";
-  context.shadowBlur = Math.max(8, logo.fontSize * 0.06);
-  context.fillText(logo.text, width / 2, logo.y);
-
-  const imageData = context.getImageData(0, 0, mask.width, mask.height).data;
-  const step = width < 520 ? 6 : width < 900 ? 5 : 4;
-  const targets: TargetPoint[] = [];
-
-  for (let y = 0; y < mask.height; y += step) {
-    for (let x = 0; x < mask.width; x += step) {
-      const alpha = imageData[(y * mask.width + x) * 4 + 3];
-
-      if (alpha > 110) {
-        targets.push({ x, y });
-      }
-    }
-  }
-
-  return targets;
-}
-
-function randomStart(width: number, height: number): TargetPoint {
-  if (Math.random() < 0.3) {
-    return {
-      x: Math.random() * width,
-      y: Math.random() * height
-    };
-  }
-
+function randomFromEdge(width: number, height: number) {
+  const pad = Math.max(width, height) * 0.12;
   const side = Math.floor(Math.random() * 4);
-  const pad = Math.max(width, height) * 0.08;
 
   if (side === 0) {
     return { x: Math.random() * width, y: -pad };
@@ -210,139 +109,119 @@ function randomStart(width: number, height: number): TargetPoint {
   return { x: -pad, y: Math.random() * height };
 }
 
-function createParticles(targets: TargetPoint[], width: number, height: number) {
-  const maxParticles = getParticleBudget(width);
-  const selectedTargets =
-    targets.length > maxParticles
-      ? shuffle([...targets]).slice(0, maxParticles)
-      : targets;
+function createParticles(width: number, height: number): Particle[] {
+  const starCount = width < 640 ? 90 : 140;
+  const signalCount = width < 640 ? 92 : 150;
+  const shardCount = width < 640 ? 16 : 28;
+  const particles: Particle[] = [];
 
-  return selectedTargets.map((target, index): Particle => {
-    const start = randomStart(width, height);
-
-    return {
-      x: start.x,
-      y: start.y,
-      targetX: target.x,
-      targetY: target.y,
-      vx: (Math.random() - 0.5) * 1.35,
-      vy: (Math.random() - 0.5) * 1.35,
-      alpha: 0,
-      baseSize: 0.48 + Math.random() * 1.05,
+  for (let index = 0; index < starCount; index += 1) {
+    particles.push({
+      kind: "star",
+      x: Math.random() * width,
+      y: Math.random() * height,
+      startX: 0,
+      startY: 0,
+      vx: (Math.random() - 0.5) * 0.08,
+      vy: 0.08 + Math.random() * 0.18,
+      angle: Math.random() * Math.PI * 2,
+      orbitX: 0,
+      orbitY: 0,
+      speed: 0,
+      size: 0.45 + Math.random() * 1.15,
+      length: 0,
+      alpha: 0.16 + Math.random() * 0.45,
       color: COLORS[index % COLORS.length],
-      phase: Math.random() * Math.PI * 2,
-      noise: 0.25 + Math.random() * 1.05,
-      delay: 180 + Math.random() * 1200,
-      flicker: 0.45 + Math.random() * 1.1,
-      trail: index % 5 === 0
-    };
-  });
-}
-
-function createParticleSprites() {
-  const sprites = new Map<string, HTMLCanvasElement>();
-  const spriteSize = 48;
-
-  COLORS.forEach((color) => {
-    const sprite = document.createElement("canvas");
-    const context = sprite.getContext("2d");
-
-    sprite.width = spriteSize;
-    sprite.height = spriteSize;
-
-    if (context) {
-      const center = spriteSize / 2;
-      const glow = context.createRadialGradient(
-        center,
-        center,
-        0,
-        center,
-        center,
-        center
-      );
-
-      glow.addColorStop(0, color);
-      glow.addColorStop(0.18, `${color}CC`);
-      glow.addColorStop(0.48, `${color}4D`);
-      glow.addColorStop(1, `${color}00`);
-      context.fillStyle = glow;
-      context.fillRect(0, 0, spriteSize, spriteSize);
-
-      context.fillStyle = "#F4E8FF";
-      context.globalAlpha = color === "#F4E8FF" ? 0.62 : 0.26;
-      context.beginPath();
-      context.arc(center, center, 1.9, 0, Math.PI * 2);
-      context.fill();
-    }
-
-    sprites.set(color, sprite);
-  });
-
-  return sprites;
-}
-
-function createRenderLayers(width: number, height: number): RenderLayers {
-  return {
-    background: createBackgroundLayer(width, height),
-    sprites: createParticleSprites()
-  };
-}
-
-function createBackgroundLayer(width: number, height: number) {
-  const layer = document.createElement("canvas");
-  const context = layer.getContext("2d");
-
-  layer.width = width;
-  layer.height = height;
-
-  if (!context) {
-    return layer;
+      phase: Math.random() * Math.PI * 2
+    });
   }
 
-  context.fillStyle = "#05030A";
-  context.fillRect(0, 0, width, height);
+  for (let index = 0; index < signalCount; index += 1) {
+    const start = randomFromEdge(width, height);
+    const angle = (index / signalCount) * Math.PI * 2;
 
-  const depth = context.createLinearGradient(0, 0, width, height);
-  depth.addColorStop(0, "rgba(11, 6, 20, 0.32)");
-  depth.addColorStop(0.52, "rgba(42, 10, 74, 0.12)");
-  depth.addColorStop(1, "rgba(5, 3, 10, 0.48)");
-  context.fillStyle = depth;
-  context.fillRect(0, 0, width, height);
+    particles.push({
+      kind: "signal",
+      x: start.x,
+      y: start.y,
+      startX: start.x,
+      startY: start.y,
+      vx: 0,
+      vy: 0,
+      angle,
+      orbitX: 0,
+      orbitY: 0,
+      speed: 0.002 + Math.random() * 0.003,
+      size: 0.85 + Math.random() * 1.55,
+      length: 0,
+      alpha: 0,
+      color: COLORS[index % COLORS.length],
+      phase: Math.random() * Math.PI * 2
+    });
+  }
 
-  const centerGlow = context.createRadialGradient(
-    width / 2,
-    height * 0.48,
-    0,
-    width / 2,
-    height * 0.48,
-    Math.max(width, height) * 0.62
-  );
-  centerGlow.addColorStop(0, "rgba(138, 43, 226, 0.13)");
-  centerGlow.addColorStop(0.36, "rgba(176, 38, 255, 0.055)");
-  centerGlow.addColorStop(1, "rgba(5, 3, 10, 0)");
-  context.fillStyle = centerGlow;
-  context.fillRect(0, 0, width, height);
+  for (let index = 0; index < shardCount; index += 1) {
+    const start = randomFromEdge(width, height);
+    const angle = (index / shardCount) * Math.PI * 2 + Math.random() * 0.45;
 
-  return layer;
+    particles.push({
+      kind: "shard",
+      x: start.x,
+      y: start.y,
+      startX: start.x,
+      startY: start.y,
+      vx: 0,
+      vy: 0,
+      angle,
+      orbitX: 0,
+      orbitY: 0,
+      speed: 0.0015 + Math.random() * 0.0022,
+      size: 1,
+      length: 22 + Math.random() * 48,
+      alpha: 0,
+      color: COLORS[(index + 1) % COLORS.length],
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  return particles;
 }
 
 function drawBackground(
   context: CanvasRenderingContext2D,
-  layer: HTMLCanvasElement,
   width: number,
   height: number,
-  fade = true
+  settled: boolean
 ) {
   context.globalCompositeOperation = "source-over";
   context.globalAlpha = 1;
-  context.fillStyle = fade ? "rgba(5, 3, 10, 0.3)" : "#05030A";
+  context.fillStyle = settled ? "rgba(5, 3, 10, 0.24)" : "rgba(5, 3, 10, 0.34)";
   context.fillRect(0, 0, width, height);
-  context.globalAlpha = fade ? 0.72 : 1;
-  context.drawImage(layer, 0, 0, width, height);
-  context.globalAlpha = 1;
+
+  const centerGlow = context.createRadialGradient(
+    width / 2,
+    height * 0.47,
+    0,
+    width / 2,
+    height * 0.47,
+    Math.max(width, height) * 0.62
+  );
+
+  centerGlow.addColorStop(0, "rgba(176, 38, 255, 0.13)");
+  centerGlow.addColorStop(0.36, "rgba(42, 10, 74, 0.12)");
+  centerGlow.addColorStop(1, "rgba(5, 3, 10, 0)");
+  context.fillStyle = centerGlow;
+  context.fillRect(0, 0, width, height);
+
+  const floorGlow = context.createLinearGradient(0, height * 0.46, 0, height);
+  floorGlow.addColorStop(0, "rgba(255, 46, 209, 0)");
+  floorGlow.addColorStop(0.55, "rgba(176, 38, 255, 0.06)");
+  floorGlow.addColorStop(1, "rgba(42, 10, 74, 0.16)");
+  context.fillStyle = floorGlow;
+  context.fillRect(0, height * 0.44, width, height * 0.56);
 }
 
-function drawScannerLines(
+function drawLaunchBeams(
   context: CanvasRenderingContext2D,
   width: number,
   height: number,
@@ -350,155 +229,138 @@ function drawScannerLines(
   timestamp: number,
   settled: boolean
 ) {
-  const introPresence =
-    smoothstep(520, 1100, elapsed) * (1 - smoothstep(2050, 2900, elapsed));
-  const idlePresence = settled ? 0.16 : 0;
-  const alpha = Math.max(introPresence, idlePresence);
+  const reveal =
+    smoothstep(260, 1200, elapsed) * (1 - smoothstep(2600, 3500, elapsed)) +
+    (settled ? 0.18 : 0);
 
-  if (alpha <= 0.01) {
+  if (reveal <= 0.01) {
     return;
   }
 
+  const centerX = width / 2;
+  const centerY = height * 0.47;
+  const time = timestamp * 0.001;
+  const beamLength = Math.max(width, height) * 0.62;
+
   context.save();
-  context.globalAlpha = alpha;
   context.globalCompositeOperation = "lighter";
+  context.lineCap = "round";
 
-  const yOffset = (timestamp * 0.048) % 46;
+  for (let i = 0; i < 7; i += 1) {
+    const side = i % 2 === 0 ? -1 : 1;
+    const spread = (i - 3) * 0.09;
+    const angle = side * (0.28 + spread) + Math.sin(time * 0.7 + i) * 0.03;
+    const x1 = centerX + Math.cos(angle + Math.PI) * beamLength;
+    const y1 = centerY + Math.sin(angle + Math.PI) * beamLength * 0.46;
+    const x2 = centerX + Math.cos(angle) * beamLength;
+    const y2 = centerY + Math.sin(angle) * beamLength * 0.46;
+    const beam = context.createLinearGradient(x1, y1, x2, y2);
 
-  for (let y = -46 + yOffset; y < height; y += 46) {
-    const line = context.createLinearGradient(0, y, width, y);
-    line.addColorStop(0, "rgba(138, 43, 226, 0)");
-    line.addColorStop(0.45, "rgba(138, 43, 226, 0.34)");
-    line.addColorStop(0.55, "rgba(255, 46, 209, 0.22)");
-    line.addColorStop(1, "rgba(138, 43, 226, 0)");
-    context.fillStyle = line;
-    context.fillRect(0, y, width, 1.2);
+    beam.addColorStop(0, "rgba(138, 43, 226, 0)");
+    beam.addColorStop(0.46, "rgba(176, 38, 255, 0.02)");
+    beam.addColorStop(0.5, i % 3 === 0 ? "rgba(255, 46, 209, 0.28)" : "rgba(176, 38, 255, 0.23)");
+    beam.addColorStop(0.54, "rgba(244, 232, 255, 0.03)");
+    beam.addColorStop(1, "rgba(138, 43, 226, 0)");
+
+    context.globalAlpha = reveal * (0.75 - i * 0.055);
+    context.strokeStyle = beam;
+    context.lineWidth = i % 3 === 0 ? 2.2 : 1.1;
+    context.beginPath();
+    context.moveTo(x1, y1);
+    context.lineTo(x2, y2);
+    context.stroke();
   }
 
-  const scanY = (timestamp * 0.18) % height;
-  context.fillStyle = "rgba(244, 232, 255, 0.08)";
-  context.fillRect(0, scanY, width, 2);
+  context.globalAlpha = reveal * 0.55;
+  context.strokeStyle = "#F4E8FF";
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(centerX, centerY - Math.min(height * 0.2, 130));
+  context.lineTo(centerX, centerY + Math.min(height * 0.2, 130));
+  context.stroke();
   context.restore();
 }
 
-function updateParticle(
-  particle: Particle,
+function drawScanner(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
   elapsed: number,
-  timestamp: number,
-  delta: number,
-  settled: boolean
+  timestamp: number
 ) {
-  const step = Math.min(delta / 16.67, 2);
-  const seconds = timestamp * 0.001;
+  const reveal = smoothstep(360, 1050, elapsed) * (1 - smoothstep(2200, 3100, elapsed));
 
-  if (settled) {
-    const tremor = 0.18 + particle.noise * 0.24;
-    const idleX =
-      particle.targetX +
-      Math.sin(seconds * (1.15 + particle.noise) + particle.phase) * tremor;
-    const idleY =
-      particle.targetY +
-      Math.cos(seconds * (1.05 + particle.noise) + particle.phase) * tremor;
-
-    particle.x = lerp(particle.x, idleX, 0.07 * step);
-    particle.y = lerp(particle.y, idleY, 0.07 * step);
-    particle.vx *= 0.88;
-    particle.vy *= 0.88;
-    particle.alpha = lerp(particle.alpha, 0.54, 0.035 * step);
+  if (reveal <= 0.01) {
     return;
   }
 
-  const birth = smoothstep(particle.delay, particle.delay + 820, elapsed);
-  const attraction = smoothstep(1120, 3220, elapsed);
-  const dx = particle.targetX - particle.x;
-  const dy = particle.targetY - particle.y;
-  const fieldX =
-    Math.sin(seconds * 3.2 + particle.phase + particle.y * 0.012) *
-    particle.noise;
-  const fieldY =
-    Math.cos(seconds * 2.8 + particle.phase + particle.x * 0.014) *
-    particle.noise;
-  const pull = 0.003 + attraction * 0.021;
-  const turbulence = (1 - attraction) * 0.09;
+  const y = height * 0.47 + Math.sin(timestamp * 0.002) * height * 0.12;
+  const line = context.createLinearGradient(0, y, width, y);
 
-  particle.vx += (dx * pull + fieldX * turbulence) * step;
-  particle.vy += (dy * pull + fieldY * turbulence) * step;
-  particle.vx *= Math.pow(0.86, step);
-  particle.vy *= Math.pow(0.86, step);
-  particle.x += particle.vx * step;
-  particle.y += particle.vy * step;
+  line.addColorStop(0, "rgba(138, 43, 226, 0)");
+  line.addColorStop(0.42, "rgba(176, 38, 255, 0.35)");
+  line.addColorStop(0.5, "rgba(244, 232, 255, 0.48)");
+  line.addColorStop(0.58, "rgba(255, 46, 209, 0.3)");
+  line.addColorStop(1, "rgba(138, 43, 226, 0)");
 
-  if (attraction > 0.82) {
-    const lock = (attraction - 0.82) / 0.18;
-    const microJitter = (1 - lock) * particle.noise * 1.15;
-
-    particle.x = lerp(
-      particle.x,
-      particle.targetX + Math.sin(seconds * 14 + particle.phase) * microJitter,
-      0.08 * step
-    );
-    particle.y = lerp(
-      particle.y,
-      particle.targetY + Math.cos(seconds * 13 + particle.phase) * microJitter,
-      0.08 * step
-    );
-  }
-
-  const firstBlink = 0.16 + smoothstep(360, 960, elapsed) * 0.34;
-  particle.alpha = birth * (firstBlink + attraction * 0.38);
+  context.save();
+  context.globalCompositeOperation = "lighter";
+  context.globalAlpha = reveal;
+  context.fillStyle = line;
+  context.fillRect(0, y - 1, width, 2);
+  context.fillStyle = "rgba(176, 38, 255, 0.055)";
+  context.fillRect(0, y - 32, width, 64);
+  context.restore();
 }
 
-function drawParticles(
+function drawEnergyRing(
   context: CanvasRenderingContext2D,
-  particles: Particle[],
-  sprites: Map<string, HTMLCanvasElement>,
+  width: number,
+  height: number,
   elapsed: number,
   timestamp: number,
   settled: boolean
 ) {
-  const attraction = settled ? 1 : smoothstep(1120, 3220, elapsed);
-  const flickerStrength = settled ? 0.035 : 0.14;
+  const centerX = width / 2;
+  const centerY = height * 0.47;
+  const radiusX = Math.min(width * 0.31, 430);
+  const radiusY = Math.min(height * 0.15, 150);
+  const reveal = settled ? 1 : smoothstep(1250, 2900, elapsed);
+  const time = timestamp * 0.001;
+
+  if (reveal <= 0.01) {
+    return;
+  }
 
   context.save();
   context.globalCompositeOperation = "lighter";
+  context.lineWidth = 1.2;
 
-  for (const particle of particles) {
-    const sprite = sprites.get(particle.color);
-    const flicker =
-      1 +
-      Math.sin(timestamp * 0.006 * particle.flicker + particle.phase) *
-        flickerStrength;
-    const size = particle.baseSize + attraction * 0.55;
-    const alpha = clamp(particle.alpha * flicker, 0, 1);
+  for (let i = 0; i < 3; i += 1) {
+    const start = time * (0.28 + i * 0.1) + i * 1.7;
+    const end = start + Math.PI * (0.36 + i * 0.08);
 
-    if (alpha <= 0.01 || !sprite) {
-      continue;
-    }
-
-    const spriteSize = size * (settled ? 6.4 : 6);
-    context.globalAlpha = alpha * 0.58;
-    context.drawImage(
-      sprite,
-      particle.x - spriteSize / 2,
-      particle.y - spriteSize / 2,
-      spriteSize,
-      spriteSize
-    );
-
-    if (particle.trail && !settled && attraction > 0.28) {
-      context.globalAlpha = alpha * 0.15;
-      context.strokeStyle = particle.color;
-      context.lineWidth = 0.55;
-      context.beginPath();
-      context.moveTo(particle.x, particle.y);
-      context.lineTo(
-        particle.x - particle.vx * 5.5,
-        particle.y - particle.vy * 5.5
-      );
-      context.stroke();
-    }
+    context.globalAlpha = reveal * (0.18 - i * 0.035);
+    context.strokeStyle = i === 1 ? "#FF2ED1" : "#B026FF";
+    context.beginPath();
+    context.ellipse(centerX, centerY, radiusX + i * 18, radiusY + i * 9, 0, start, end);
+    context.stroke();
   }
 
+  context.globalAlpha = reveal * 0.18;
+  context.strokeStyle = "#8A2BE2";
+  context.setLineDash([8, 18]);
+  context.beginPath();
+  context.ellipse(centerX, centerY, radiusX * 0.82, radiusY * 0.82, 0, 0, Math.PI * 2);
+  context.stroke();
+  context.setLineDash([]);
+
+  context.globalAlpha = reveal * 0.12;
+  context.strokeStyle = "#F4E8FF";
+  context.lineWidth = 0.8;
+  context.beginPath();
+  context.ellipse(centerX, centerY, radiusX * 0.58, radiusY * 0.58, 0, 0, Math.PI * 2);
+  context.stroke();
   context.restore();
 }
 
@@ -508,79 +370,165 @@ function drawShockwave(
   height: number,
   elapsed: number
 ) {
-  const progress = clamp((elapsed - SHOCKWAVE_START) / SHOCKWAVE_DURATION);
+  const progress = clamp((elapsed - SHOCKWAVE_AT) / 700);
 
   if (progress <= 0 || progress >= 1) {
-    return 0;
-  }
-
-  const eased = easeOutCubic(progress);
-  const radius = eased * Math.min(width, height) * 0.46;
-  const alpha = 1 - progress;
-
-  context.save();
-  context.globalCompositeOperation = "lighter";
-  context.strokeStyle = `rgba(255, 46, 209, ${0.72 * alpha})`;
-  context.lineWidth = 2.4 + alpha * 5;
-  context.shadowColor = "#FF2ED1";
-  context.shadowBlur = 42;
-  context.beginPath();
-  context.arc(width / 2, height * 0.48, radius, 0, Math.PI * 2);
-  context.stroke();
-
-  context.fillStyle = `rgba(176, 38, 255, ${0.08 * alpha})`;
-  context.fillRect(0, height * 0.48 - 1, width, 2);
-  context.restore();
-
-  return alpha;
-}
-
-function drawGlitchBurst(
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  intensity: number
-) {
-  if (intensity <= 0.01) {
     return;
   }
 
-  const logo = getLogoType(width, height);
-  const areaWidth = Math.min(width * 0.72, logo.fontSize * 5.8);
-  const lines = Math.floor(5 + intensity * 14);
+  const centerX = width / 2;
+  const centerY = height * 0.47;
+  const alpha = 1 - progress;
+  const eased = easeOutCubic(progress);
 
   context.save();
   context.globalCompositeOperation = "lighter";
+  context.strokeStyle = `rgba(255, 46, 209, ${0.46 * alpha})`;
+  context.lineWidth = 1.8 + alpha * 4;
   context.shadowColor = "#FF2ED1";
-  context.shadowBlur = 22;
+  context.shadowBlur = 26;
+  context.beginPath();
+  context.arc(centerX, centerY, eased * Math.min(width, height) * 0.5, 0, Math.PI * 2);
+  context.stroke();
 
-  for (let i = 0; i < lines; i += 1) {
-    const y =
-      logo.y +
-      (Math.random() - 0.5) * logo.fontSize * 1.25 +
-      Math.sin(i) * 6;
-    const x = width / 2 - areaWidth / 2 + Math.random() * areaWidth;
-    const lineWidth = 16 + Math.random() * areaWidth * 0.26;
-    const lineHeight = 1 + Math.random() * 2.4;
+  context.shadowBlur = 0;
+  context.globalAlpha = alpha * 0.18;
+  context.fillStyle = "#F4E8FF";
+  context.fillRect(0, centerY - 1, width, 2);
+  context.restore();
+}
 
-    context.globalAlpha = intensity * (0.22 + Math.random() * 0.46);
-    context.fillStyle = Math.random() > 0.46 ? "#FF2ED1" : "#B026FF";
-    context.fillRect(x, y, lineWidth, lineHeight);
+function updateAndDrawParticles(
+  context: CanvasRenderingContext2D,
+  particles: Particle[],
+  width: number,
+  height: number,
+  elapsed: number,
+  timestamp: number,
+  delta: number,
+  settled: boolean
+) {
+  const step = Math.min(delta / 16.67, 2);
+  const centerX = width / 2;
+  const centerY = height * 0.47;
+  const radiusX = Math.min(width * 0.31, 430);
+  const radiusY = Math.min(height * 0.15, 150);
+  const gather = settled ? 1 : smoothstep(760, 2820, elapsed);
+  const seconds = timestamp * 0.001;
+
+  context.save();
+  context.globalCompositeOperation = "lighter";
+
+  for (const particle of particles) {
+    if (particle.kind === "star") {
+      particle.x += particle.vx * step;
+      particle.y += particle.vy * step;
+
+      if (particle.y > height + 12) {
+        particle.y = -12;
+        particle.x = Math.random() * width;
+      }
+
+      context.globalAlpha =
+        particle.alpha * (0.65 + Math.sin(seconds + particle.phase) * 0.22);
+      context.fillStyle = particle.color;
+      context.fillRect(particle.x, particle.y, particle.size, particle.size);
+      continue;
+    }
+
+    if (particle.kind === "shard") {
+      if (settled) {
+        particle.angle += particle.speed * step;
+      }
+
+      const launch = smoothstep(360, 2380, elapsed);
+      const easedLaunch = easeOutCubic(launch);
+      const targetX =
+        centerX +
+        Math.cos(particle.angle + seconds * 0.12) *
+          (radiusX * (1.03 + Math.sin(particle.phase) * 0.16));
+      const targetY =
+        centerY +
+        Math.sin(particle.angle + seconds * 0.12) *
+          (radiusY * (1.04 + Math.cos(particle.phase) * 0.16));
+
+      particle.x = lerp(particle.startX, targetX, easedLaunch);
+      particle.y = lerp(particle.startY, targetY, easedLaunch);
+      particle.alpha = lerp(particle.alpha, settled ? 0.36 : 0.64, 0.045 * step);
+
+      const dx = Math.cos(particle.angle + seconds * 0.12);
+      const dy = Math.sin(particle.angle + seconds * 0.12) * 0.5;
+      const shardGradient = context.createLinearGradient(
+        particle.x - dx * particle.length,
+        particle.y - dy * particle.length,
+        particle.x + dx * particle.length,
+        particle.y + dy * particle.length
+      );
+
+      shardGradient.addColorStop(0, `${particle.color}00`);
+      shardGradient.addColorStop(0.5, particle.color);
+      shardGradient.addColorStop(1, `${particle.color}00`);
+      context.globalAlpha = particle.alpha * (0.5 + launch * 0.5);
+      context.strokeStyle = shardGradient;
+      context.lineWidth = width < 640 ? 1.4 : 1.9;
+      context.beginPath();
+      context.moveTo(particle.x - dx * particle.length, particle.y - dy * particle.length);
+      context.lineTo(particle.x + dx * particle.length, particle.y + dy * particle.length);
+      context.stroke();
+      continue;
+    }
+
+    if (settled) {
+      particle.angle += particle.speed * step;
+    }
+
+    const drift =
+      Math.sin(seconds * 1.35 + particle.phase) * (settled ? 4 : 60 * (1 - gather));
+    const targetX = centerX + Math.cos(particle.angle) * (radiusX + drift);
+    const targetY = centerY + Math.sin(particle.angle) * (radiusY + drift * 0.18);
+    const previousX = particle.x;
+    const previousY = particle.y;
+
+    particle.x = lerp(particle.x, targetX, 0.025 + gather * 0.075);
+    particle.y = lerp(particle.y, targetY, 0.025 + gather * 0.075);
+    particle.alpha = lerp(particle.alpha, 0.44 + gather * 0.26, 0.035 * step);
+
+    if (gather > 0.2) {
+      context.globalAlpha = particle.alpha * 0.12;
+      context.strokeStyle = particle.color;
+      context.lineWidth = 0.65;
+      context.beginPath();
+      context.moveTo(previousX, previousY);
+      context.lineTo(particle.x, particle.y);
+      context.stroke();
+    }
+
+    context.globalAlpha = particle.alpha;
+    context.fillStyle = particle.color;
+    context.beginPath();
+    context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+    context.fill();
   }
 
   context.restore();
 }
 
-function drawStaticScene(
+function renderScene(
   context: CanvasRenderingContext2D,
   particles: Particle[],
-  layers: RenderLayers,
   width: number,
-  height: number
+  height: number,
+  elapsed: number,
+  timestamp: number,
+  delta: number,
+  settled: boolean
 ) {
-  drawBackground(context, layers.background, width, height, false);
-  drawScannerLines(context, width, height, 2200, 0, true);
-  drawParticles(context, particles, layers.sprites, INTRO_DURATION, 0, true);
+  drawBackground(context, width, height, settled);
+  drawLaunchBeams(context, width, height, elapsed, timestamp, settled);
+  drawScanner(context, width, height, elapsed, timestamp);
+  updateAndDrawParticles(context, particles, width, height, elapsed, timestamp, delta, settled);
+  drawEnergyRing(context, width, height, elapsed, timestamp, settled);
+  drawShockwave(context, width, height, elapsed);
 }
 
 export default function TitanGraIntro({
@@ -619,43 +567,24 @@ export default function TitanGraIntro({
       return undefined;
     }
 
-    let animationFrame = 0;
     let width = 0;
     let height = 0;
+    let animationFrame = 0;
     let particles: Particle[] = [];
-    let layers: RenderLayers | null = null;
     let previousTimestamp = performance.now();
     const startTimestamp = performance.now();
-    let nextBurstTimestamp = startTimestamp + 5200;
-    let burstEndTimestamp = 0;
 
     const resize = () => {
       const bounds = canvas.getBoundingClientRect();
+      const pixelRatio = getCanvasPixelRatio(bounds.width);
 
       width = Math.max(320, Math.floor(bounds.width));
       height = Math.max(520, Math.floor(bounds.height));
-      const pixelRatio = getCanvasPixelRatio(width);
-
       canvas.width = Math.floor(width * pixelRatio);
       canvas.height = Math.floor(height * pixelRatio);
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
       context.imageSmoothingEnabled = true;
-
-      const targets = buildTextTargets(width, height);
-      particles = createParticles(targets, width, height);
-      layers = createRenderLayers(width, height);
-
-      if (completedRef.current || reducedMotion) {
-        particles.forEach((particle) => {
-          particle.x = particle.targetX;
-          particle.y = particle.targetY;
-          particle.alpha = 0.92;
-        });
-      }
-
-      if (reducedMotion && layers) {
-        drawStaticScene(context, particles, layers, width, height);
-      }
+      particles = createParticles(width, height);
     };
 
     const observer =
@@ -666,6 +595,7 @@ export default function TitanGraIntro({
     resize();
 
     if (reducedMotion) {
+      renderScene(context, particles, width, height, INTRO_DURATION, 0, 16.67, true);
       finishIntro();
 
       return () => {
@@ -675,56 +605,20 @@ export default function TitanGraIntro({
     }
 
     const animate = (timestamp: number) => {
+      const rawElapsed = timestamp - startTimestamp;
       const elapsed = completedRef.current
-        ? INTRO_DURATION + timestamp - startTimestamp
-        : timestamp - startTimestamp;
+        ? INTRO_DURATION
+        : Math.min(rawElapsed, INTRO_DURATION);
       const delta = timestamp - previousTimestamp;
+      const settled = completedRef.current || rawElapsed >= INTRO_DURATION;
+
       previousTimestamp = timestamp;
 
-      const settled = completedRef.current || elapsed >= INTRO_DURATION;
-
-      if (elapsed >= INTRO_DURATION) {
+      if (rawElapsed >= INTRO_DURATION) {
         finishIntro();
       }
 
-      if (settled && timestamp > nextBurstTimestamp) {
-        burstEndTimestamp = timestamp + 140 + Math.random() * 120;
-        nextBurstTimestamp = timestamp + 1700 + Math.random() * 3600;
-      }
-
-      const burstIntensity =
-        timestamp < burstEndTimestamp
-          ? 1 - (burstEndTimestamp - timestamp) / 260
-          : 0;
-
-      if (!layers) {
-        animationFrame = requestAnimationFrame(animate);
-        return;
-      }
-
-      drawBackground(context, layers.background, width, height, true);
-      drawScannerLines(context, width, height, elapsed, timestamp, settled);
-
-      particles.forEach((particle) => {
-        updateParticle(particle, elapsed, timestamp, delta, settled);
-      });
-
-      drawParticles(
-        context,
-        particles,
-        layers.sprites,
-        elapsed,
-        timestamp,
-        settled
-      );
-      const shockAlpha = drawShockwave(context, width, height, elapsed);
-      drawGlitchBurst(
-        context,
-        width,
-        height,
-        Math.max(shockAlpha, clamp(burstIntensity))
-      );
-
+      renderScene(context, particles, width, height, elapsed, timestamp, delta, settled);
       animationFrame = requestAnimationFrame(animate);
     };
 
@@ -743,8 +637,15 @@ export default function TitanGraIntro({
 
       <canvas ref={canvasRef} className="intro__canvas" aria-hidden="true" />
 
-      <div className="intro__brand" aria-hidden="true">
-        TitanGra
+      <div className="intro__brand" data-text={BRAND} aria-hidden="true">
+        {Array.from(BRAND).map((letter, index) => (
+          <span
+            key={`${letter}-${index}`}
+            style={{ "--letter-index": index } as CSSProperties}
+          >
+            {letter}
+          </span>
+        ))}
       </div>
 
       {!isReady && (
