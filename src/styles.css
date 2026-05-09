@@ -955,7 +955,7 @@ a {
 
 .lab-console__screen strong {
   display: block;
-  width: min(100%, 17rem);
+  width: min(100%, 22rem);
   margin-top: clamp(4rem, 10vw, 7rem);
   color: var(--text);
   font-size: clamp(2.2rem, 5.2vw, 4.4rem);
