@@ -4,30 +4,30 @@ import TitanGraIntro from "./components/TitanGraIntro";
 
 const focusAreas = [
   {
-    title: "Programmazione di sistema",
+    title: "Systems Programming",
     description:
-      "Interesse per C e C++, gestione della memoria, logica a basso livello e basi solide di programmazione studiate nel percorso universitario."
+      "Interest in C and C++, memory management, low-level logic, and strong programming foundations built through my university coursework."
   },
   {
-    title: "Java e logica applicativa",
+    title: "Java & Application Logic",
     description:
-      "Progetti orientati a strutture modulari, gestione dello stato, applicazioni da terminale e ragionamento algoritmico."
+      "Projects focused on modular architecture, state management, console applications, and algorithmic reasoning."
   },
   {
-    title: "Web development",
+    title: "Web Development",
     description:
-      "Esperimenti e applicazioni con PHP, SQL, JavaScript, TypeScript, React, PWA e interfacce responsive pensate per il browser."
+      "Experiments and applications with PHP, SQL, JavaScript, TypeScript, React, PWA, and responsive browser-first interfaces."
   },
   {
-    title: "Linux e network analysis",
+    title: "Linux & Network Analysis",
     description:
-      "Studio e sperimentazione con ambienti Linux, Kali Linux e strumenti come Wireshark per osservare traffico, protocolli e comportamento delle reti."
+      "Study and hands-on practice with Linux environments, Kali Linux, and tools like Wireshark for traffic inspection, protocol analysis, and network behavior."
   }
 ];
 
 const stats = [
-  { value: "CS", label: "Scienze dell'Informazione" },
-  { value: "C/C++", label: "interesse system-side" },
+  { value: "CS", label: "Computer Science" },
+  { value: "C/C++", label: "system-side interest" },
   { value: "Web", label: "PHP, SQL, JS, TypeScript" },
   { value: "Tools", label: "Linux, Kali, Wireshark" }
 ];
@@ -37,7 +37,7 @@ const projects = [
     status: "PWA",
     title: "PS3 Home Button Helper",
     description:
-      "Una web app leggera che permette di inviare il comando PS/Home a una PS3 compatibile da telefono, tablet o PC. Un progetto pratico tra browser, rete locale e interazione con un dispositivo reale.",
+      "A lightweight web app that sends the PS/Home button command to a compatible PS3 from a phone, tablet, or PC. A practical project bridging browser tech, local networking, and real-device interaction.",
     tags: ["JavaScript", "PWA", "Local Network", "PS3"],
     repo: "https://github.com/TitanGra16/ps3-home-button-helper",
     live: "https://titangra16.github.io/ps3-home-button-helper/"
@@ -46,15 +46,15 @@ const projects = [
     status: "Java",
     title: "Tic-Tac-Toe Java",
     description:
-      "Gioco del Tris da terminale con modalita Player vs Player e Player vs Computer. Mostra gestione della logica di gioco, struttura modulare e attenzione all'esperienza console.",
+      "A terminal-based Tic-Tac-Toe game with Player vs Player and Player vs Computer modes. Showcases game logic management, modular structure, and attention to console UX.",
     tags: ["Java", "Console", "Game Logic", "OOP"],
     repo: "https://github.com/TitanGra16/Tic-Tac-Toe-Java"
   },
   {
     status: "PHP",
-    title: "Simulazione Ordine",
+    title: "Order Simulation",
     description:
-      "Piattaforma web per simulare la creazione di ordini personalizzati. Rappresenta il lato web classico del portfolio, con PHP e logica applicativa orientata a un flusso utente concreto.",
+      "A web platform for simulating custom order creation. Represents the classic web side of the portfolio, with PHP and application logic oriented around a concrete user flow.",
     tags: ["PHP", "Web", "Forms", "Order Flow"],
     repo: "https://github.com/TitanGra16/Simulazione_Ordine"
   },
@@ -62,7 +62,7 @@ const projects = [
     status: "Portfolio",
     title: "TitanGra Portfolio",
     description:
-      "Questo sito: portfolio React + TypeScript con intro canvas, stile cyber, layout responsive e deploy automatico su GitHub Pages.",
+      "This very site: a React + TypeScript portfolio with a canvas intro, cyber aesthetic, responsive layout, and automated deployment to GitHub Pages.",
     tags: ["React", "TypeScript", "Canvas", "Vite"],
     repo: "https://github.com/TitanGra16/TitanGra16.github.io",
     live: "https://titangra16.github.io/"
@@ -89,27 +89,27 @@ const skills = [
 const processSteps = [
   {
     step: "01",
-    title: "Studio le basi",
+    title: "Study the Fundamentals",
     description:
-      "Algoritmi, strutture dati, logica, programmazione in C/C++ e Java: prima capisco il comportamento, poi costruisco."
+      "Algorithms, data structures, logic, C/C++ and Java programming: I understand the behavior first, then I build."
   },
   {
     step: "02",
-    title: "Prototipo sul web",
+    title: "Prototype on the Web",
     description:
-      "Trasformo idee piccole in interfacce utilizzabili con PHP, SQL, JavaScript, TypeScript e React."
+      "I turn small ideas into usable interfaces with PHP, SQL, JavaScript, TypeScript, and React."
   },
   {
     step: "03",
-    title: "Analizzo sistemi e reti",
+    title: "Analyze Systems & Networks",
     description:
-      "Uso Linux, Kali Linux e Wireshark per osservare traffico, protocolli e dettagli tecnici che spesso restano invisibili."
+      "I use Linux, Kali Linux, and Wireshark to observe traffic, protocols, and technical details that often remain invisible."
   },
   {
     step: "04",
-    title: "Rifinisco e pubblico",
+    title: "Refine & Publish",
     description:
-      "Pulisco codice, testo e responsive design, poi porto online i progetti con Git, GitHub e GitHub Pages."
+      "I clean up code, test responsive design, then bring projects online with Git, GitHub, and GitHub Pages."
   }
 ];
 
@@ -166,29 +166,28 @@ export default function App() {
           <div className="section-inner">
             <div className="section-header">
               <p className="section-kicker">About</p>
-              <h2>Studente di Scienze dell'Informazione con anima tecnica.</h2>
+              <h2>Computer Science student with a technical soul.</h2>
               <p className="section-lede">
-                Studio Scienze dell'Informazione all'universita e mi piace
-                esplorare sia la programmazione piu vicina al sistema, come C e
-                C++, sia lo sviluppo applicativo con Java e il mondo web con PHP,
-                SQL, JavaScript e TypeScript.
+                I study Computer Science at university and enjoy exploring
+                both system-level programming with C and C++, application
+                development with Java, and the web world with PHP, SQL,
+                JavaScript, and TypeScript.
               </p>
             </div>
 
             <div className="about-layout">
               <div className="about-panel about-panel--main">
                 <p>
-                  Mi interessa capire come funzionano davvero le cose: dalla
-                  logica di un programma console alla struttura di una web app,
-                  fino al deploy di un progetto online e all'analisi di rete con
-                  strumenti come Wireshark. Per questo alterno progetti
-                  universitari, piccoli tool personali, ambienti Linux/Kali e
-                  interfacce web piu sperimentali.
+                  I'm interested in understanding how things truly work: from
+                  the logic of a console program to the architecture of a web
+                  app, all the way to deploying projects online and analyzing
+                  network traffic with tools like Wireshark. That's why I
+                  alternate between university projects, small personal tools,
+                  Linux/Kali environments, and more experimental web interfaces.
                 </p>
                 <p>
-                  TitanGra e il mio spazio per raccogliere questo percorso:
-                  codice, studio, curiosita tecnica e progetti che crescono nel
-                  tempo.
+                  TitanGra is my space to collect this journey: code, study,
+                  technical curiosity, and projects that grow over time.
                 </p>
               </div>
 
@@ -227,18 +226,18 @@ export default function App() {
           <div className="section-inner lab-layout">
             <div className="section-header lab-header">
               <p className="section-kicker">Lab Process</p>
-              <h2>Un percorso tecnico, non una vetrina statica.</h2>
+              <h2>A technical journey, not a static showcase.</h2>
               <p className="section-lede">
-                La struttura del sito ora lavora come una sequenza: ingresso
-                cinematico, identita, metodo, progetti e contatto. Ogni sezione
-                resta viva con livelli parallax leggeri e leggibili.
+                The site structure works as a sequence: cinematic entrance,
+                identity, method, projects, and contact. Every section stays
+                alive with lightweight, readable parallax layers.
               </p>
             </div>
 
             <div className="lab-console" aria-label="TitanGra technical process">
               <div className="lab-console__screen">
                 <span className="lab-console__eyebrow">/usr/titangra/process</span>
-                <strong>Information Science</strong>
+                <strong>Computer Science</strong>
                 <p>C/C++ . Java . PHP . SQL . Linux . Network Analysis</p>
                 <div className="lab-console__grid" aria-hidden="true" />
               </div>
@@ -265,10 +264,10 @@ export default function App() {
           <div className="section-inner">
             <div className="section-header">
               <p className="section-kicker">Projects</p>
-              <h2>Progetti personali e repository rappresentativi.</h2>
+              <h2>Personal projects and representative repositories.</h2>
               <p className="section-lede">
-                Ho selezionato i progetti pubblici che rappresentano meglio il
-                mio percorso attuale: web app, Java, PHP e questo portfolio.
+                I've selected the public projects that best represent my current
+                path: web apps, Java, PHP, and this portfolio.
               </p>
             </div>
 
@@ -308,11 +307,10 @@ export default function App() {
             <div className="contact-layout">
               <div className="section-header">
                 <p className="section-kicker">Contact</p>
-                <h2>Studio, progetto, miglioro.</h2>
+                <h2>I study, I build, I improve.</h2>
                 <p className="section-lede">
-                  Se vuoi seguire i miei progetti, vedere come evolvono o
-                  contattarmi per idee e collaborazioni, trovi qui i link
-                  principali.
+                  Want to follow my projects, see how they evolve, or reach out
+                  for ideas and collaborations? Here are the main links.
                 </p>
               </div>
 

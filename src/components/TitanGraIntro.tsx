@@ -656,7 +656,7 @@ export default function TitanGraIntro({
 
       <div className="intro__hud intro__hud--left" aria-hidden="true">
         <span>INIT 01</span>
-        <strong>Information Science</strong>
+        <strong>Computer Science</strong>
       </div>
 
       <div className="intro__hud intro__hud--right" aria-hidden="true">
