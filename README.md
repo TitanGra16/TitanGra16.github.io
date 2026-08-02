@@ -2,45 +2,35 @@
 
 # TitanGra
 
-**A cinematic developer portfolio born from particles, neon light, and motion.**
+**A fluid, interactive Computer Science portfolio.**
 
-[Live Portfolio](https://titangra16.github.io/) | [Source Code](https://github.com/TitanGra16/TitanGra16.github.io)
+[Live Portfolio](https://titangra16.github.io/) · [Source Code](https://github.com/TitanGra16/TitanGra16.github.io)
 
 </div>
 
 ## Overview
 
-TitanGra is a dark cyber portfolio homepage built with React, Vite, and TypeScript. The first screen opens with a full-canvas digital birth sequence: neon particles drift out of the dark, converge into the TitanGra wordmark, pulse through a glitch shockwave, and settle into a living hero section.
+TitanGra is a personal portfolio built with React, TypeScript, Vite, and the
+Canvas API. It presents my path through Computer Science, systems programming,
+application development, web technologies, Linux, and network analysis.
 
-The goal is not to feel like a template. It is designed as a recognizable visual identity for a developer portfolio: elegant, technical, atmospheric, and fast enough to run directly on GitHub Pages.
+The visual direction is intentionally dark and focused: purple and lavender
+light move through the first viewport as an organic canvas field that reacts to
+the pointer without delaying access to the content.
 
 ## Highlights
 
-- Full-screen canvas intro powered by `requestAnimationFrame`
-- Offscreen text mask used to generate particle target positions
-- Neon purple, lilac, and fuchsia particle system
-- Glitch burst, scanner lines, glow trails, and shockwave effects
-- Smooth idle state after the intro, with subtle particle motion
-- Responsive layout with device pixel ratio handling
-- Reduced-motion support for accessibility
-- Minimal navbar with About, Projects, and Contact anchors
-- Automated GitHub Pages deployment through GitHub Actions
+- Interactive fluid canvas environment with pointer inertia
+- Immediate, content-first hero instead of a blocking intro sequence
+- Responsive project, capability, process, and contact sections
+- Keyboard-friendly mobile navigation and visible focus states
+- Reduced-motion support and semantic page structure
+- Optimized animation lifecycle when the hero leaves the viewport
+- Automated GitHub Pages deployment
 
 ## Tech Stack
 
-React | Vite | TypeScript | Canvas API | CSS
-
-## Project Structure
-
-```text
-src/
-  App.tsx
-  main.tsx
-  styles.css
-  components/
-    Navbar.tsx
-    TitanGraIntro.tsx
-```
+React · TypeScript · Vite · Canvas API · CSS
 
 ## Local Development
 
@@ -57,10 +47,5 @@ npm run build
 
 ## Deployment
 
-The site is deployed to GitHub Pages from the production build in `dist/`.
-
-Deployment is handled by `.github/workflows/deploy.yml`. In the repository settings, GitHub Pages should use **GitHub Actions** as the source.
-
-## Motion And Accessibility
-
-The hero includes hidden accessible text for screen readers and respects `prefers-reduced-motion`. When reduced motion is enabled, the intro is skipped and a static TitanGra scene is shown instead.
+The production build is deployed to GitHub Pages through the workflow in
+`.github/workflows/deploy.yml`.

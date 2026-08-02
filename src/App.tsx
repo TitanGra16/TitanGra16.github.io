@@ -1,75 +1,83 @@
-import { useCallback, useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import TitanGraIntro from "./components/TitanGraIntro";
 
-const focusAreas = [
+const capabilities = [
   {
-    title: "Systems Programming",
+    number: "01",
+    title: "Systems & foundations",
     description:
-      "Interest in C and C++, memory management, low-level logic, and strong programming foundations built through my university coursework."
+      "C and C++ are where I sharpen my understanding of memory, algorithms, data structures, and the mechanics beneath software.",
+    stack: "C · C++ · Algorithms"
   },
   {
-    title: "Java & Application Logic",
+    number: "02",
+    title: "Application logic",
     description:
-      "Projects focused on modular architecture, state management, console applications, and algorithmic reasoning."
+      "I use Java to turn requirements into modular programs, with deliberate state management, clear structure, and reliable behavior.",
+    stack: "Java · OOP · Architecture"
   },
   {
-    title: "Web Development",
+    number: "03",
+    title: "Web experiences",
     description:
-      "Experiments and applications with PHP, SQL, JavaScript, TypeScript, React, PWA, and responsive browser-first interfaces."
+      "From PHP and SQL to React and TypeScript, I build responsive interfaces around concrete, useful flows.",
+    stack: "React · TypeScript · PHP · SQL"
   },
   {
-    title: "Linux & Network Analysis",
+    number: "04",
+    title: "Linux & networks",
     description:
-      "Study and hands-on practice with Linux environments, Kali Linux, and tools like Wireshark for traffic inspection, protocol analysis, and network behavior."
+      "I explore Linux environments, protocols, and traffic analysis to understand what happens beyond the interface.",
+    stack: "Linux · Kali · Wireshark"
   }
-];
-
-const stats = [
-  { value: "CS", label: "Computer Science" },
-  { value: "C/C++", label: "system-side interest" },
-  { value: "Web", label: "PHP, SQL, JS, TypeScript" },
-  { value: "Tools", label: "Linux, Kali, Wireshark" }
 ];
 
 const projects = [
   {
-    status: "PWA",
+    number: "01",
+    status: "PWA · Featured",
     title: "PS3 Home Button Helper",
     description:
-      "A lightweight web app that sends the PS/Home button command to a compatible PS3 from a phone, tablet, or PC. A practical project bridging browser tech, local networking, and real-device interaction.",
-    tags: ["JavaScript", "PWA", "Local Network", "PS3"],
+      "A lightweight web app that lets a phone, tablet, or computer send the PS/Home command to a compatible PlayStation 3 over the local network.",
+    tags: ["JavaScript", "PWA", "Local network", "PS3"],
     repo: "https://github.com/TitanGra16/ps3-home-button-helper",
-    live: "https://titangra16.github.io/ps3-home-button-helper/"
+    live: "https://titangra16.github.io/ps3-home-button-helper/",
+    visual: "signal"
   },
   {
+    number: "02",
     status: "Java",
-    title: "Tic-Tac-Toe Java",
+    title: "Tic-Tac-Toe",
     description:
-      "A terminal-based Tic-Tac-Toe game with Player vs Player and Player vs Computer modes. Showcases game logic management, modular structure, and attention to console UX.",
-    tags: ["Java", "Console", "Game Logic", "OOP"],
-    repo: "https://github.com/TitanGra16/Tic-Tac-Toe-Java"
+      "A terminal game with Player vs Player and Player vs Computer modes, built around clean game-state logic and a focused console experience.",
+    tags: ["Java", "OOP", "Game logic", "Console"],
+    repo: "https://github.com/TitanGra16/Tic-Tac-Toe-Java",
+    visual: "grid"
   },
   {
+    number: "03",
     status: "PHP",
     title: "Order Simulation",
     description:
-      "A web platform for simulating custom order creation. Represents the classic web side of the portfolio, with PHP and application logic oriented around a concrete user flow.",
-    tags: ["PHP", "Web", "Forms", "Order Flow"],
-    repo: "https://github.com/TitanGra16/Simulazione_Ordine"
+      "A web platform for assembling a custom order through a complete, structured user flow powered by PHP application logic.",
+    tags: ["PHP", "Forms", "Web", "Order flow"],
+    repo: "https://github.com/TitanGra16/Simulazione_Ordine",
+    visual: "stack"
   },
   {
-    status: "Portfolio",
+    number: "04",
+    status: "React · TypeScript",
     title: "TitanGra Portfolio",
     description:
-      "This very site: a React + TypeScript portfolio with a canvas intro, cyber aesthetic, responsive layout, and automated deployment to GitHub Pages.",
+      "This evolving digital home: an interactive, accessible portfolio with a fluid canvas environment and automated GitHub Pages delivery.",
     tags: ["React", "TypeScript", "Canvas", "Vite"],
     repo: "https://github.com/TitanGra16/TitanGra16.github.io",
-    live: "https://titangra16.github.io/"
+    live: "https://titangra16.github.io/",
+    visual: "orbit"
   }
 ];
 
-const skills = [
+const tools = [
   "C",
   "C++",
   "Java",
@@ -82,217 +90,162 @@ const skills = [
   "Linux",
   "Kali Linux",
   "Wireshark",
-  "Git",
-  "GitHub Pages"
+  "Git"
 ];
 
-const processSteps = [
+const principles = [
   {
     step: "01",
-    title: "Study the Fundamentals",
+    title: "Understand",
     description:
-      "Algorithms, data structures, logic, C/C++ and Java programming: I understand the behavior first, then I build."
+      "I break the problem down and study the system before choosing the implementation."
   },
   {
     step: "02",
-    title: "Prototype on the Web",
+    title: "Build",
     description:
-      "I turn small ideas into usable interfaces with PHP, SQL, JavaScript, TypeScript, and React."
+      "I prototype the smallest useful version, then give the code a clear, maintainable structure."
   },
   {
     step: "03",
-    title: "Analyze Systems & Networks",
+    title: "Refine",
     description:
-      "I use Linux, Kali Linux, and Wireshark to observe traffic, protocols, and technical details that often remain invisible."
-  },
-  {
-    step: "04",
-    title: "Refine & Publish",
-    description:
-      "I clean up code, test responsive design, then bring projects online with Git, GitHub, and GitHub Pages."
+      "I test the details, improve the experience, and publish what is ready to keep learning in public."
   }
 ];
 
 export default function App() {
-  const [introComplete, setIntroComplete] = useState(false);
-
-  useEffect(() => {
-    let animationFrame = 0;
-
-    const updateParallax = () => {
-      animationFrame = 0;
-      const scrollY = window.scrollY;
-      const root = document.documentElement;
-
-      root.style.setProperty("--parallax-slow", `${scrollY * -0.035}px`);
-      root.style.setProperty("--parallax-medium", `${scrollY * -0.065}px`);
-      root.style.setProperty("--parallax-fast", `${scrollY * -0.11}px`);
-    };
-
-    const requestUpdate = () => {
-      if (animationFrame) {
-        return;
-      }
-
-      animationFrame = window.requestAnimationFrame(updateParallax);
-    };
-
-    requestUpdate();
-    window.addEventListener("scroll", requestUpdate, { passive: true });
-    window.addEventListener("resize", requestUpdate);
-
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener("scroll", requestUpdate);
-      window.removeEventListener("resize", requestUpdate);
-    };
-  }, []);
-
-  const handleIntroComplete = useCallback(() => {
-    setIntroComplete(true);
-  }, []);
-
   return (
-    <div className={`app-shell ${introComplete ? "is-ready" : ""}`}>
-      <Navbar visible={introComplete} />
+    <div className="app-shell">
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
 
-      <main>
-        <TitanGraIntro onIntroComplete={handleIntroComplete} />
+      <Navbar />
 
-        <section id="about" className="content-section content-section--first">
-          <div className="section-depth section-depth--about-a" aria-hidden="true" />
-          <div className="section-depth section-depth--about-b" aria-hidden="true" />
+      <main id="main-content">
+        <TitanGraIntro />
 
-          <div className="section-inner">
-            <div className="section-header">
-              <p className="section-kicker">About</p>
-              <h2>Computer Science student with a technical soul.</h2>
-              <p className="section-lede">
-                I study Computer Science at university and enjoy exploring
-                both system-level programming with C and C++, application
-                development with Java, and the web world with PHP, SQL,
-                JavaScript, and TypeScript.
+        <section id="about" className="section section--about">
+          <div className="section__inner">
+            <div className="section-heading reveal-block">
+              <p className="eyebrow">
+                <span>01</span> About
               </p>
+              <h2>
+                Learning the layers between an idea and a system that works.
+              </h2>
             </div>
 
-            <div className="about-layout">
-              <div className="about-panel about-panel--main">
-                <p>
-                  I'm interested in understanding how things truly work: from
-                  the logic of a console program to the architecture of a web
-                  app, all the way to deploying projects online and analyzing
-                  network traffic with tools like Wireshark. That's why I
-                  alternate between university projects, small personal tools,
-                  Linux/Kali environments, and more experimental web interfaces.
+            <div className="about-grid">
+              <div className="about-copy reveal-block">
+                <p className="about-copy__lead">
+                  I am a Computer Science student who likes to move between
+                  levels: from low-level logic to a polished interface, and
+                  from a network packet to the product a person actually uses.
                 </p>
                 <p>
-                  TitanGra is my space to collect this journey: code, study,
-                  technical curiosity, and projects that grow over time.
+                  My work grows through university study, personal experiments,
+                  and small practical tools. I care about understanding the
+                  reason behind a solution—not only making it run once.
                 </p>
+                <a className="text-link" href="#projects">
+                  Explore selected work <span aria-hidden="true">↘</span>
+                </a>
               </div>
 
-              <div className="stat-grid" aria-label="Portfolio stack highlights">
-                {stats.map((item) => (
-                  <div className="stat-card" key={item.label}>
-                    <strong>{item.value}</strong>
-                    <span>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="skill-strip" aria-label="Technologies and interests">
-              {skills.map((skill) => (
-                <span key={skill}>{skill}</span>
-              ))}
-            </div>
-
-            <div className="focus-grid">
-              {focusAreas.map((area, index) => (
-                <article className="focus-card" key={area.title}>
-                  <span className="card-index">0{index + 1}</span>
-                  <h3>{area.title}</h3>
-                  <p>{area.description}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="lab" className="content-section content-section--lab">
-          <div className="section-depth section-depth--lab-a" aria-hidden="true" />
-          <div className="section-depth section-depth--lab-b" aria-hidden="true" />
-
-          <div className="section-inner lab-layout">
-            <div className="section-header lab-header">
-              <p className="section-kicker">Lab Process</p>
-              <h2>A technical journey, not a static showcase.</h2>
-              <p className="section-lede">
-                The site structure works as a sequence: cinematic entrance,
-                identity, method, projects, and contact. Every section stays
-                alive with lightweight, readable parallax layers.
-              </p>
-            </div>
-
-            <div className="lab-console" aria-label="TitanGra technical process">
-              <div className="lab-console__screen">
-                <span className="lab-console__eyebrow">/usr/titangra/process</span>
-                <strong>Computer Science</strong>
-                <p>C/C++ . Java . PHP . SQL . Linux . Network Analysis</p>
-                <div className="lab-console__grid" aria-hidden="true" />
-              </div>
-            </div>
-
-            <div className="process-list">
-              {processSteps.map((item) => (
-                <article className="process-item" key={item.step}>
-                  <span>{item.step}</span>
+              <aside className="profile-card reveal-block" aria-label="Profile summary">
+                <div className="profile-card__mark">
+                  <img src="/logo.png" alt="" />
+                </div>
+                <dl>
                   <div>
-                    <h3>{item.title}</h3>
-                    <p>{item.description}</p>
+                    <dt>Current path</dt>
+                    <dd>Computer Science</dd>
                   </div>
+                  <div>
+                    <dt>Based in</dt>
+                    <dd>Italy</dd>
+                  </div>
+                  <div>
+                    <dt>Main focus</dt>
+                    <dd>Software · Systems · Web</dd>
+                  </div>
+                  <div>
+                    <dt>Mindset</dt>
+                    <dd>Curious by default</dd>
+                  </div>
+                </dl>
+              </aside>
+            </div>
+
+            <div className="capability-grid" aria-label="Areas of focus">
+              {capabilities.map((capability) => (
+                <article className="capability-card reveal-block" key={capability.title}>
+                  <span className="capability-card__number">{capability.number}</span>
+                  <div>
+                    <h3>{capability.title}</h3>
+                    <p>{capability.description}</p>
+                  </div>
+                  <span className="capability-card__stack">{capability.stack}</span>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="projects" className="content-section">
-          <div className="section-depth section-depth--projects-a" aria-hidden="true" />
-          <div className="section-depth section-depth--projects-b" aria-hidden="true" />
-
-          <div className="section-inner">
-            <div className="section-header">
-              <p className="section-kicker">Projects</p>
-              <h2>Personal projects and representative repositories.</h2>
-              <p className="section-lede">
-                I've selected the public projects that best represent my current
-                path: web apps, Java, PHP, and this portfolio.
+        <section id="projects" className="section section--projects">
+          <div className="section__inner">
+            <div className="section-heading section-heading--split reveal-block">
+              <div>
+                <p className="eyebrow">
+                  <span>02</span> Selected work
+                </p>
+                <h2>Projects built to turn learning into something tangible.</h2>
+              </div>
+              <p>
+                A focused selection of public work across web development,
+                Java, PHP, local networking, and interface experimentation.
               </p>
             </div>
 
             <div className="project-grid">
-              {projects.map((project) => (
-                <article className="project-card" key={project.title}>
-                  <div className="project-card__top">
-                    <span>{project.status}</span>
-                    <div className="project-links">
-                      {"live" in project && project.live ? (
+              {projects.map((project, index) => (
+                <article
+                  className={`project-card project-card--${project.visual} ${
+                    index === 0 ? "project-card--featured" : ""
+                  } reveal-block`}
+                  key={project.title}
+                >
+                  <div className="project-card__visual" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+
+                  <div className="project-card__content">
+                    <div className="project-card__meta">
+                      <span>{project.number}</span>
+                      <span>{project.status}</span>
+                    </div>
+                    <h3>{project.title}</h3>
+                    <p>{project.description}</p>
+                    <div className="tag-list" aria-label={`${project.title} technologies`}>
+                      {project.tags.map((tag) => (
+                        <span key={tag}>{tag}</span>
+                      ))}
+                    </div>
+                    <div className="project-card__links">
+                      {project.live ? (
                         <a href={project.live} target="_blank" rel="noreferrer">
-                          Live
+                          View live <span aria-hidden="true">↗</span>
                         </a>
                       ) : null}
                       <a href={project.repo} target="_blank" rel="noreferrer">
-                        Code
+                        Source code <span aria-hidden="true">↗</span>
                       </a>
                     </div>
-                  </div>
-                  <h3>{project.title}</h3>
-                  <p>{project.description}</p>
-                  <div className="tag-list" aria-label={`${project.title} stack`}>
-                    {project.tags.map((tag) => (
-                      <span key={tag}>{tag}</span>
-                    ))}
                   </div>
                 </article>
               ))}
@@ -300,35 +253,81 @@ export default function App() {
           </div>
         </section>
 
-        <section id="contact" className="content-section">
-          <div className="section-depth section-depth--contact-a" aria-hidden="true" />
-
-          <div className="section-inner">
-            <div className="contact-layout">
-              <div className="section-header">
-                <p className="section-kicker">Contact</p>
-                <h2>I study, I build, I improve.</h2>
-                <p className="section-lede">
-                  Want to follow my projects, see how they evolve, or reach out
-                  for ideas and collaborations? Here are the main links.
+        <section id="process" className="section section--process">
+          <div className="section__inner">
+            <div className="process-layout">
+              <div className="section-heading reveal-block">
+                <p className="eyebrow">
+                  <span>03</span> How I work
+                </p>
+                <h2>A simple loop: understand, build, refine.</h2>
+                <p className="section-heading__lede">
+                  The tools change. The habit of looking closely, building
+                  deliberately, and improving with evidence does not.
                 </p>
               </div>
 
-              <div className="contact-actions" aria-label="Contact links">
-                <a href="mailto:titangra.dev@gmail.com">
-                  <span>Email</span>
-                  titangra.dev@gmail.com
+              <div className="principle-list">
+                {principles.map((principle) => (
+                  <article className="principle reveal-block" key={principle.step}>
+                    <span>{principle.step}</span>
+                    <div>
+                      <h3>{principle.title}</h3>
+                      <p>{principle.description}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div className="toolbox reveal-block">
+              <div className="toolbox__label">
+                <span>Toolkit</span>
+                <small>Always evolving</small>
+              </div>
+              <div className="toolbox__items" aria-label="Technical toolkit">
+                {tools.map((tool) => (
+                  <span key={tool}>{tool}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="contact" className="section section--contact">
+          <div className="section__inner">
+            <div className="contact-panel reveal-block">
+              <div className="contact-panel__orb" aria-hidden="true" />
+              <p className="eyebrow">
+                <span>04</span> Contact
+              </p>
+              <h2>Have an idea, an opportunity, or simply want to connect?</h2>
+              <p>
+                I am always interested in thoughtful projects, technical
+                conversations, and new things worth learning.
+              </p>
+              <div className="contact-panel__actions">
+                <a className="button button--primary" href="mailto:titangra.dev@gmail.com">
+                  Send me an email <span aria-hidden="true">↗</span>
                 </a>
-                <a href="https://github.com/TitanGra16" target="_blank" rel="noreferrer">
-                  <span>GitHub</span>
-                  github.com/TitanGra16
-                </a>
-                <a href="#projects">
-                  <span>Work</span>
-                  Explore projects
+                <a
+                  className="button button--ghost"
+                  href="https://github.com/TitanGra16"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  GitHub profile
                 </a>
               </div>
             </div>
+
+            <footer className="footer">
+              <a className="footer__brand" href="#home" aria-label="Back to top">
+                TitanGra<span>.</span>
+              </a>
+              <p>Designed and built with curiosity in Italy.</p>
+              <a href="#home">Back to top ↑</a>
+            </footer>
           </div>
         </section>
       </main>
