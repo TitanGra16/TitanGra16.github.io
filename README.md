@@ -1,6 +1,6 @@
 <div align="center">
 
-# TitanGra
+# Giuseppe Maglione — Portfolio
 
 **A fluid, interactive Computer Science portfolio.**
 
@@ -9,6 +9,12 @@
 </div>
 
 ## Overview
+
+### Development note
+
+This portfolio was built with substantial AI assistance, particularly for the React/TypeScript implementation and the visual components.
+
+I use it primarily as my personal portfolio and as a way to explore modern frontend technologies, rather than as evidence of independent React or TypeScript proficiency.
 
 TitanGra is a personal portfolio built with React, TypeScript, Vite, and the
 Canvas API. It presents my path through Computer Science, systems programming,
