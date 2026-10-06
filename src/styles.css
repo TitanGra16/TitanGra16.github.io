@@ -570,8 +570,9 @@ img {
   width: 90%;
   height: 90%;
   object-fit: contain;
-  opacity: 0.92;
-  filter: saturate(0.72) contrast(1.08);
+  opacity: 0.96;
+  mix-blend-mode: screen;
+  filter: saturate(1.1) contrast(1.05);
 }
 
 .hero-visual__glare {
@@ -849,6 +850,8 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  mix-blend-mode: screen;
+  filter: saturate(1.05);
 }
 
 .profile-card dl {
