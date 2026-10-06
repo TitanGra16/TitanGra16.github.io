@@ -70,6 +70,9 @@ function FluidCanvas({ hostRef }: { hostRef: React.RefObject<HTMLElement | null>
     let animationFrame = 0;
     let isVisible = true;
     let lastTime = 0;
+    let lastFrameTime = 0;
+    // Throttle a ~50fps per ridurre carico GPU su display ad alto refresh rate
+    const FRAME_BUDGET = 1000 / 50;
 
     const pointer = {
       currentX: 0,
@@ -193,12 +196,21 @@ function FluidCanvas({ hostRef }: { hostRef: React.RefObject<HTMLElement | null>
     };
 
     const draw = (timestamp: number) => {
+      // Throttle: salta il frame se non è passato abbastanza tempo
+      if (timestamp - lastFrameTime < FRAME_BUDGET && lastFrameTime > 0) {
+        animationFrame = window.requestAnimationFrame(draw);
+        return;
+      }
+      lastFrameTime = timestamp;
       lastTime = timestamp || lastTime;
+
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
       context.clearRect(0, 0, width, height);
 
-      pointer.currentX += (pointer.targetX - pointer.currentX) * 0.045;
-      pointer.currentY += (pointer.targetY - pointer.currentY) * 0.045;
+      // Lerp del puntatore scalato sul delta per uniformità su qualsiasi refresh rate
+      const lerpFactor = clamp(0.045 * (timestamp - (lastFrameTime - FRAME_BUDGET)) / 16.67, 0.01, 0.12);
+      pointer.currentX += (pointer.targetX - pointer.currentX) * lerpFactor;
+      pointer.currentY += (pointer.targetY - pointer.currentY) * lerpFactor;
 
       drawOrbs(lastTime);
       drawRibbon(
